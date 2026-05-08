@@ -118,10 +118,9 @@ export function Footer() {
           src={logo}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 w-auto -translate-x-1/2 -translate-y-1/2 select-none"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[clamp(420px,86vw,620px)] w-auto max-w-none -translate-x-1/2 -translate-y-1/2 select-none md:h-[clamp(500px,58vw,700px)] lg:h-[clamp(240px,34vw,520px)]"
           style={{
-            height: "clamp(240px, 34vw, 520px)",
-            opacity: 0.045,
+            opacity: 0.04,
             filter: "grayscale(1)",
             zIndex: 0,
           }}
