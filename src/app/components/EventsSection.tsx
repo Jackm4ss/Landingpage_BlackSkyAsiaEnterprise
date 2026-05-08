@@ -95,8 +95,21 @@ const events: Event[] = [
 const CARD_WIDTH = 460;
 const GAP = 20;
 
+function getContrastText(hex: string) {
+  const value = hex.replace("#", "");
+  const r = parseInt(value.slice(0, 2), 16) / 255;
+  const g = parseInt(value.slice(2, 4), 16) / 255;
+  const b = parseInt(value.slice(4, 6), 16) / 255;
+  const srgb = [r, g, b].map((channel) =>
+    channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4)
+  );
+  const luminance = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  return luminance > 0.42 ? "#050505" : "#FFFFFF";
+}
+
 function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }) {
   const [hovered, setHovered] = useState(false);
+  const ctaTextColor = getContrastText(event.accentColor);
 
   return (
     <motion.div
@@ -273,31 +286,46 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
           className="flex items-center justify-between pt-5"
           style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
         >
-          <button
+          <motion.button
+            whileHover={{
+              backgroundColor: event.accentColor,
+              color: ctaTextColor,
+              boxShadow: `0 0 22px ${event.glowColor}`,
+            }}
+            whileTap={{
+              scale: 0.97,
+              backgroundColor: event.accentColor,
+              color: ctaTextColor,
+              boxShadow: `0 0 28px ${event.glowColor}`,
+            }}
+            transition={{ duration: 0.18 }}
             style={{
               display: "flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: "8px",
               fontFamily: "'Barlow Condensed', sans-serif",
               fontWeight: 700,
               fontSize: "11px",
               letterSpacing: "0.28em",
-              color: event.soldOut ? "rgba(255,255,255,0.22)" : event.accentColor,
-              background: "none",
-              border: "none",
-              cursor: event.soldOut ? "not-allowed" : "pointer",
-              padding: 0,
+              color: "#FFFFFF",
+              background: "transparent",
+              border: `1px solid ${event.soldOut ? event.accentColor + "80" : event.accentColor}`,
+              cursor: "pointer",
+              minHeight: 42,
+              padding: "0 18px",
+              boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.04)`,
             }}
           >
             {event.soldOut ? "NOTIFY ME" : "GET TICKETS"}
             <ArrowRight
               size={12}
               style={{
-                transform: hovered && !event.soldOut ? "translateX(5px)" : "translateX(0)",
+                transform: hovered ? "translateX(5px)" : "translateX(0)",
                 transition: "transform 0.3s",
               }}
             />
-          </button>
+          </motion.button>
           <span
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",

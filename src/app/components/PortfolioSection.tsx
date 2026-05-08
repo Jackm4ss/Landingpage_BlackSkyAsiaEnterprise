@@ -105,6 +105,14 @@ const categories = ["ALL", "CONCERT", "FESTIVAL", "MEDIA"];
 const cardDescriptionColor = "rgba(235,245,255,0.78)";
 const cardMetaColor = "rgba(226,238,255,0.68)";
 
+function matchesCategory(work: Work, filter: string) {
+  if (filter === "ALL") return true;
+  if (filter === "CONCERT") return /concert|tour/i.test(work.category);
+  if (filter === "FESTIVAL") return /festival/i.test(work.category);
+  if (filter === "MEDIA") return /media/i.test(work.category);
+  return true;
+}
+
 // FEATURE card: wide, image with overlay, large title
 function FeatureCard({ work, delay }: { work: Work; delay: number }) {
   const [hovered, setHovered] = useState(false);
@@ -143,10 +151,17 @@ function FeatureCard({ work, delay }: { work: Work; delay: number }) {
       />
 
       {/* Arrow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-5 right-5 flex lg:hidden items-center justify-center"
+        style={{ width: 40, height: 40, background: work.accentColor }}
+      >
+        <ArrowUpRight size={18} color="#fff" />
+      </div>
       <motion.div
         animate={{ opacity: hovered ? 1 : 0, x: hovered ? 0 : 8, y: hovered ? 0 : -8 }}
         transition={{ duration: 0.25 }}
-        className="absolute top-5 right-5 flex items-center justify-center"
+        className="absolute top-5 right-5 hidden lg:flex items-center justify-center"
         style={{ width: 40, height: 40, background: work.accentColor }}
       >
         <ArrowUpRight size={18} color="#fff" />
@@ -211,10 +226,17 @@ function TallCard({ work, delay }: { work: Work; delay: number }) {
       <motion.div animate={{ opacity: hovered ? 1 : 0 }} className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 90%, ${work.accentColor}28 0%, transparent 65%)` }} />
 
       {/* Arrow */}
+      <div
+        aria-hidden="true"
+        className="absolute top-5 right-5 flex lg:hidden items-center justify-center"
+        style={{ width: 38, height: 38, background: work.accentColor }}
+      >
+        <ArrowUpRight size={16} color="#fff" />
+      </div>
       <motion.div
         animate={{ opacity: hovered ? 1 : 0, x: hovered ? 0 : 8, y: hovered ? 0 : -8 }}
         transition={{ duration: 0.25 }}
-        className="absolute top-5 right-5 flex items-center justify-center"
+        className="absolute top-5 right-5 hidden lg:flex items-center justify-center"
         style={{ width: 38, height: 38, background: work.accentColor }}
       >
         <ArrowUpRight size={16} color="#fff" />
@@ -280,10 +302,17 @@ function SquareCard({ work, delay }: { work: Work; delay: number }) {
         <motion.div animate={{ opacity: hovered ? 1 : 0 }} className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 80%, ${work.accentColor}20 0%, transparent 65%)` }} />
 
         {/* Arrow */}
+        <div
+          aria-hidden="true"
+          className="absolute top-4 right-4 flex lg:hidden items-center justify-center"
+          style={{ width: 34, height: 34, background: work.accentColor }}
+        >
+          <ArrowUpRight size={14} color="#fff" />
+        </div>
         <motion.div
           animate={{ opacity: hovered ? 1 : 0, x: hovered ? 0 : 8, y: hovered ? 0 : -8 }}
           transition={{ duration: 0.25 }}
-          className="absolute top-4 right-4 flex items-center justify-center"
+          className="absolute top-4 right-4 hidden lg:flex items-center justify-center"
           style={{ width: 34, height: 34, background: work.accentColor }}
         >
           <ArrowUpRight size={14} color="#fff" />
@@ -421,6 +450,21 @@ export function PortfolioSection() {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const sectionRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const filteredWorks = works.filter((work) => matchesCategory(work, activeFilter));
+
+  const renderFilteredCard = (work: Work, index: number) => {
+    const delay = 0.05 + index * 0.07;
+
+    if (work.type === "square") {
+      return <SquareCard work={work} delay={delay} />;
+    }
+
+    if (work.type === "tall") {
+      return <TallCard work={work} delay={delay} />;
+    }
+
+    return <FeatureCard work={work} delay={delay} />;
+  };
 
   return (
     <section
@@ -476,6 +520,7 @@ export function PortfolioSection() {
             {categories.map((cat) => (
               <button
                 key={cat}
+                aria-pressed={activeFilter === cat}
                 onClick={() => setActiveFilter(cat)}
                 className="px-5 py-2 transition-all duration-300"
                 style={{
@@ -497,7 +542,7 @@ export function PortfolioSection() {
 
         {/* ─── BENTO GRID ─── */}
         <div
-          className="hidden xl:grid gap-3"
+          className={activeFilter === "ALL" ? "hidden xl:grid gap-3" : "hidden"}
           style={{
             gridTemplateColumns: "1fr 1fr 1fr",
             gridTemplateRows: "360px 320px 220px",
@@ -527,7 +572,7 @@ export function PortfolioSection() {
 
         {/* Tablet bento */}
         <div
-          className="hidden md:grid xl:hidden gap-4"
+          className={activeFilter === "ALL" ? "hidden md:grid xl:hidden gap-4" : "hidden"}
           style={{
             gridTemplateColumns: "1fr 1fr",
             gridTemplateRows: "340px 300px 300px 240px",
@@ -551,7 +596,7 @@ export function PortfolioSection() {
         </div>
 
         {/* Mobile stacked */}
-        <div className="flex flex-col gap-4 md:hidden">
+        <div className={activeFilter === "ALL" ? "flex flex-col gap-4 md:hidden" : "hidden"}>
           <div style={{ height: "360px" }}>
             <FeatureCard work={works[0]} delay={0.05} />
           </div>
@@ -567,6 +612,29 @@ export function PortfolioSection() {
           <div style={{ height: "360px" }}>
             <FeatureCard work={works[4]} delay={0.3} />
           </div>
+        </div>
+
+        {/* Filtered results */}
+        <div className={activeFilter === "ALL" ? "hidden" : "hidden md:grid md:grid-cols-2 xl:grid-cols-3 gap-4"}>
+          {filteredWorks.map((work, index) => (
+            <div
+              key={work.id}
+              style={{ height: work.type === "tall" ? "520px" : "360px" }}
+            >
+              {renderFilteredCard(work, index)}
+            </div>
+          ))}
+        </div>
+
+        <div className={activeFilter === "ALL" ? "hidden" : "flex flex-col gap-4 md:hidden"}>
+          {filteredWorks.map((work, index) => (
+            <div
+              key={work.id}
+              style={{ height: work.type === "tall" ? "430px" : "360px" }}
+            >
+              {renderFilteredCard(work, index)}
+            </div>
+          ))}
         </div>
       </div>
     </section>
