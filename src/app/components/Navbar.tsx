@@ -28,6 +28,11 @@ export function Navbar() {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
+  const goToLogin = () => {
+    setMobileOpen(false);
+    window.location.assign("/login");
+  };
+
   return (
     <>
       <motion.nav
@@ -98,6 +103,22 @@ export function Navbar() {
 
           {/* CTA + Mobile */}
           <div className="flex items-center gap-4">
+            <button
+              onClick={goToLogin}
+              className="hidden lg:flex items-center px-2 py-3 transition-colors duration-300"
+              style={{
+                background: "none",
+                border: "none",
+                color: "rgba(255,255,255,0.72)",
+                cursor: "pointer",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: "13px",
+                fontWeight: 700,
+                letterSpacing: 0,
+              }}
+            >
+              LOGIN
+            </button>
             <button
               onClick={() => handleNav("#events")}
               className="hidden lg:flex items-center gap-2 px-6 py-3 transition-all duration-300 hover:opacity-90"
@@ -183,6 +204,22 @@ export function Navbar() {
             </div>
             <div className="px-8 pb-12">
               <button
+                onClick={goToLogin}
+                className="w-full py-4 mb-3"
+                style={{
+                  background: "rgba(255,255,255,0.06)",
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontWeight: 700,
+                  fontSize: "14px",
+                  letterSpacing: 0,
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  cursor: "pointer",
+                }}
+              >
+                LOGIN
+              </button>
+              <button
                 onClick={() => handleNav("#events")}
                 className="w-full py-4"
                 style={{
@@ -190,7 +227,7 @@ export function Navbar() {
                   fontFamily: "'Barlow Condensed', sans-serif",
                   fontWeight: 700,
                   fontSize: "14px",
-                  letterSpacing: "0.25em",
+                  letterSpacing: 0,
                   color: "#fff",
                   border: "none",
                   cursor: "pointer",

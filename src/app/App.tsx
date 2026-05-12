@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react";
 import { Navbar } from "./components/Navbar";
 import { HeroSection } from "./components/HeroSection";
 import { AboutSection } from "./components/AboutSection";
@@ -6,8 +7,61 @@ import { PortfolioSection } from "./components/PortfolioSection";
 import { StatsSection } from "./components/StatsSection";
 import { NewsSection } from "./components/NewsSection";
 import { Footer } from "./components/Footer";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { LoginSuccessPage } from "./pages/LoginSuccessPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+
+const getPathname = () => window.location.pathname.replace(/\/$/, "") || "/";
+
+function LandingPage() {
+  return (
+    <>
+      <Navbar />
+      <HeroSection />
+      <AboutSection />
+      <EventsSection />
+      <PortfolioSection />
+      <StatsSection />
+      <NewsSection />
+      <Footer />
+    </>
+  );
+}
 
 export default function App() {
+  const [pathname, setPathname] = useState(getPathname);
+
+  const navigate = useCallback((path: string) => {
+    window.history.pushState(null, "", path);
+    setPathname(getPathname());
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => setPathname(getPathname());
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const renderPage = () => {
+    if (pathname === "/login") return <LoginPage onNavigate={navigate} />;
+    if (pathname === "/register") return <RegisterPage onNavigate={navigate} />;
+    if (pathname === "/forgot-password") {
+      return <ForgotPasswordPage onNavigate={navigate} />;
+    }
+    if (pathname === "/reset-password") {
+      return <ResetPasswordPage onNavigate={navigate} />;
+    }
+    if (pathname === "/login/success") {
+      return <LoginSuccessPage onNavigate={navigate} />;
+    }
+
+    return <LandingPage />;
+  };
+
   return (
     <div
       style={{
@@ -42,14 +96,7 @@ export default function App() {
         }
       `}</style>
 
-      <Navbar />
-      <HeroSection />
-      <AboutSection />
-      <EventsSection />
-      <PortfolioSection />
-      <StatsSection />
-      <NewsSection />
-      <Footer />
+      {renderPage()}
     </div>
   );
 }
