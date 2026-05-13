@@ -18,18 +18,31 @@
   padding: clamp(130px, 16vw, 190px) clamp(20px, 5vw, 72px) clamp(48px, 8vw, 92px);
 }
 
-.blog-hero span,
+.blog-hero-kicker span,
 .blog-section-heading span {
   color: #e11d48;
   font-family: "Barlow Condensed", sans-serif;
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.22em;
+  font-weight: 600;
+  letter-spacing: 0.4em;
   text-transform: uppercase;
 }
 
+.blog-hero-kicker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.blog-hero-kicker div {
+  width: 32px;
+  height: 2px;
+  background: linear-gradient(90deg, #e11d48, transparent);
+}
+
 .blog-hero h1 {
-  margin: 18px 0 0;
+  margin: 0;
   max-width: 980px;
   color: #fff;
   font-family: "Barlow Condensed", sans-serif;

@@ -30,29 +30,54 @@
   flex: 0 0 auto;
 }
 
-.bsa-country-dropdown-value,
+.bsa-events-field .bsa-country-dropdown-value,
 .bsa-country-dropdown-item-main {
   min-width: 0;
-  display: inline-flex;
-  align-items: center;
+  display: inline-flex !important;
+  align-items: center !important;
   gap: 9px;
+  letter-spacing: 0 !important;
+  line-height: 1.1 !important;
+  text-transform: none !important;
 }
 
-.bsa-country-dropdown-value {
+.bsa-events-field .bsa-country-dropdown-value {
   flex: 1 1 auto;
+  flex-direction: row !important;
+  color: inherit !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
 }
 
-.bsa-country-dropdown-value span:last-child,
+.bsa-events-field .bsa-country-dropdown-value span,
+.bsa-country-dropdown-item-main span {
+  display: inline-block !important;
+  color: inherit !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  letter-spacing: 0 !important;
+  line-height: inherit !important;
+  text-transform: none !important;
+}
+
+.bsa-events-field .bsa-country-dropdown-value-empty {
+  color: inherit;
+}
+
+.bsa-events-field .bsa-country-dropdown-value span:last-child,
 .bsa-country-dropdown-item-main span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.bsa-country-dropdown-value img,
+.bsa-events-field .bsa-country-dropdown-value img,
 .bsa-country-dropdown-item-main img {
   width: 20px;
   height: 20px;
+  display: block !important;
   flex: 0 0 auto;
   border: 1px solid rgba(248, 250, 252, 0.2);
   border-radius: 999px;

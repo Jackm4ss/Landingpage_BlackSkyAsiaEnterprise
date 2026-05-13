@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router";
+import { Navigate, Route, Routes, useParams } from "react-router";
 import { RequireAuth } from "./routes/RequireAuth";
 import { ScrollToTop } from "./routes/ScrollToTop";
 
@@ -54,6 +54,12 @@ function RouteFallback() {
   );
 }
 
+function LegacyBlogPostRedirect() {
+  const { slug = "" } = useParams();
+
+  return <Navigate to={`/news/${slug}`} replace />;
+}
+
 export default function App() {
   return (
     <div
@@ -94,8 +100,10 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/blog/:slug" element={<BlogPostPage />} />
+          <Route path="/news" element={<BlogPage />} />
+          <Route path="/news/:slug" element={<BlogPostPage />} />
+          <Route path="/blog" element={<Navigate to="/news" replace />} />
+          <Route path="/blog/:slug" element={<LegacyBlogPostRedirect />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

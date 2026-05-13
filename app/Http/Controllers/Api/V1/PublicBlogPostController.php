@@ -108,7 +108,7 @@ class PublicBlogPostController extends Controller
                 'meta_title' => $post->seo_title,
                 'meta_description' => $post->seo_description,
                 'meta_keywords' => $post->meta_keywords,
-                'canonical_url' => $post->canonical_url ?: url('/blog/' . $post->slug),
+                'canonical_url' => $this->canonicalUrl($post),
                 'og_image' => $post->og_image ?: $post->featured_image,
             ],
         ]);
@@ -149,5 +149,16 @@ class PublicBlogPostController extends Controller
                 'slug' => $tag->slug,
             ])->values(),
         ];
+    }
+
+    private function canonicalUrl(BlogPost $post): string
+    {
+        $canonicalUrl = $post->canonical_url;
+
+        if (! $canonicalUrl || str_contains($canonicalUrl, '/blog/')) {
+            return url('/news/' . $post->slug);
+        }
+
+        return $canonicalUrl;
     }
 }

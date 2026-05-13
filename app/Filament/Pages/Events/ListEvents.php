@@ -226,6 +226,8 @@ class ListEvents extends Page
             $imageUrl = $this->storeCompressedEventImage($this->eventImage, $slug);
         }
 
+        $accentColor = $validated['accent_color'] ?? '#0EA5E9';
+
         $event->fill([
             ...$validated,
             'slug' => $slug,
@@ -235,6 +237,10 @@ class ListEvents extends Page
             'date_display' => filled($validated['date_display'] ?? null) ? $validated['date_display'] : null,
             'is_sold_out' => (bool) ($validated['is_sold_out'] ?? false),
             'image_url' => $imageUrl,
+            'accent_color' => $accentColor,
+            'glow_color' => filled($validated['glow_color'] ?? null)
+                ? $validated['glow_color']
+                : $this->glowColorFromAccent($accentColor),
             'published_at' => $validated['status'] === 'published'
                 ? ($event->published_at ?? now())
                 : null,
@@ -268,6 +274,22 @@ class ListEvents extends Page
             ->body($event->title . ' has been saved.')
             ->success()
             ->send();
+    }
+
+    private function glowColorFromAccent(string $accentColor): string
+    {
+        if (! preg_match('/^#([0-9A-Fa-f]{6})$/', $accentColor, $matches)) {
+            return 'rgba(14,165,233,0.45)';
+        }
+
+        $hex = $matches[1];
+
+        return sprintf(
+            'rgba(%d,%d,%d,0.45)',
+            hexdec(substr($hex, 0, 2)),
+            hexdec(substr($hex, 2, 2)),
+            hexdec(substr($hex, 4, 2)),
+        );
     }
 
     public function confirmDelete(int $eventId): void

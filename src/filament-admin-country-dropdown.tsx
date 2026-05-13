@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { CheckIcon, ChevronDownIcon, GlobeIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { CircleFlag } from "react-circle-flags";
 import { countries } from "country-data-list";
 
@@ -119,8 +119,7 @@ function CountryDropdown({ inputId, value }: CountryDropdownProps) {
               <span>{selectedCountry.name}</span>
             </span>
           ) : (
-            <span className="bsa-country-dropdown-value">
-              <GlobeIcon aria-hidden="true" />
+            <span className="bsa-country-dropdown-value bsa-country-dropdown-value-empty">
               <span>Select country</span>
             </span>
           )}

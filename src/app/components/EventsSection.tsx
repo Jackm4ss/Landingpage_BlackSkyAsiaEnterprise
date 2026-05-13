@@ -1,102 +1,55 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, useInView, useMotionValue, animate } from "motion/react";
 import { ArrowRight, MapPin, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { getPublicEvents, type PublicEvent } from "../events/events-api";
 import GradientText from "./GradientText";
 
-const img1 =
-  "https://images.unsplash.com/photo-1772587023108-61e60c18537a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsaXZlJTIwY29uY2VydCUyMHBlcmZvcm1lciUyMHN0YWdlJTIwc3BvdGxpZ2h0fGVufDF8fHx8MTc3ODIzOTQxN3ww&ixlib=rb-4.1.0&q=80&w=1080";
-const img2 =
-  "https://images.unsplash.com/photo-1774112560513-38b6ec3ba898?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVjdHJvbmljJTIwbXVzaWMlMjBmZXN0aXZhbCUyMGNvbG9yZnVsJTIwbGFzZXIlMjBzaG93fGVufDF8fHx8MTc3ODIzOTQxN3ww&ixlib=rb-4.1.0&q=80&w=1080";
-const img3 =
-  "https://images.unsplash.com/photo-1754492885592-34e5fe3f0093?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb25jZXJ0JTIwc3RhZ2UlMjBweXJvdGVjaG5pY3MlMjBmaXJlJTIwc2hvdyUyMGRhcmt8ZW58MXx8fHwxNzc4MjM5NDIwfDA&ixlib=rb-4.1.0&q=80&w=1080";
-const img4 =
-  "https://images.unsplash.com/photo-1739194029327-bb1b252cf9c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxTb3V0aGVhc3QlMjBBc2lhJTIwY29uY2VydCUyMG91dGRvb3IlMjBmZXN0aXZhbCUyMG5pZ2h0fGVufDF8fHx8MTc3ODIzOTQyNHww&ixlib=rb-4.1.0&q=80&w=1080";
-const img5 =
-  "https://images.unsplash.com/photo-1590699306463-dbb2b13c0ca0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNpYyUyMGVudGVydGFpbm1lbnQlMjBlZGl0b3JpYWwlMjBwaG90b2dyYXBoeSUyMGRhcmt8ZW58MXx8fHwxNzc4MjM5NDIxfDA&ixlib=rb-4.1.0&q=80&w=1080";
+const FALLBACK_EVENT_IMAGE =
+  "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80";
 
-interface Event {
+const CARD_WIDTH = 460;
+const GAP = 20;
+const DEFAULT_ACCENT = "#A855F7";
+
+interface EventSlide {
   id: number;
   title: string;
+  slug: string;
   subtitle: string;
   date: string;
+  year: string;
   venue: string;
   city: string;
   tag: string;
   accentColor: string;
   glowColor: string;
   image: string;
+  vendorUrl: string | null;
   soldOut?: boolean;
 }
 
-const events: Event[] = [
-  {
-    id: 1,
-    title: "IGNITE FESTIVAL",
-    subtitle: "The Greatest Electronic Music Gathering in SEA",
-    date: "JUL 19–21, 2026",
-    venue: "Axiata Arena",
-    city: "Kuala Lumpur",
-    tag: "FESTIVAL",
-    accentColor: "#A855F7",
-    glowColor: "rgba(168,85,247,0.45)",
-    image: img2,
-  },
-  {
-    id: 2,
-    title: "ECHOES",
-    subtitle: "Asia Arena Tour — Singapore Night",
-    date: "AUG 05, 2026",
-    venue: "Singapore Indoor Stadium",
-    city: "Singapore",
-    tag: "ARENA SHOW",
-    accentColor: "#0EA5E9",
-    glowColor: "rgba(14,165,233,0.45)",
-    image: img1,
-    soldOut: true,
-  },
-  {
-    id: 3,
-    title: "BLACKOUT",
-    subtitle: "The Ultimate Dark Rave Experience",
-    date: "AUG 23, 2026",
-    venue: "Zepp KL",
-    city: "Kuala Lumpur",
-    tag: "RAVE",
-    accentColor: "#E11D48",
-    glowColor: "rgba(225,29,72,0.45)",
-    image: img3,
-  },
-  {
-    id: 4,
-    title: "SKY SESSIONS",
-    subtitle: "Rooftop Open Air Concert Series",
-    date: "SEP 12, 2026",
-    venue: "TREC Entertainment Hub",
-    city: "Kuala Lumpur",
-    tag: "OUTDOOR",
-    accentColor: "#F97316",
-    glowColor: "rgba(249,115,22,0.45)",
-    image: img4,
-  },
-  {
-    id: 5,
-    title: "STARLIGHT",
-    subtitle: "K-Pop & Asian Pop Live Spectacular",
-    date: "OCT 03, 2026",
-    venue: "Stadium Merdeka",
-    city: "Kuala Lumpur",
-    tag: "K-POP",
-    accentColor: "#FFB700",
-    glowColor: "rgba(255,183,0,0.45)",
-    image: img5,
-  },
-];
+function normalizeHex(value?: string | null) {
+  return value && /^#[0-9A-Fa-f]{6}$/.test(value) ? value : DEFAULT_ACCENT;
+}
 
-const CARD_WIDTH = 460;
-const GAP = 20;
+function hexToRgba(hex: string, alpha: number) {
+  const value = hex.replace("#", "");
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function normalizeGlowColor(value: string | null | undefined, accentColor: string) {
+  const glowColor = value?.trim();
+
+  return glowColor || hexToRgba(accentColor, 0.45);
+}
 
 function getContrastText(hex: string) {
-  const value = hex.replace("#", "");
+  const value = normalizeHex(hex).replace("#", "");
   const r = parseInt(value.slice(0, 2), 16) / 255;
   const g = parseInt(value.slice(2, 4), 16) / 255;
   const b = parseInt(value.slice(4, 6), 16) / 255;
@@ -104,12 +57,94 @@ function getContrastText(hex: string) {
     channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4)
   );
   const luminance = 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+
   return luminance > 0.42 ? "#050505" : "#FFFFFF";
 }
 
-function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }) {
+function mapPublicEvent(event: PublicEvent): EventSlide {
+  const accentColor = normalizeHex(event.accent_color);
+
+  return {
+    id: event.id,
+    title: event.title,
+    slug: event.slug,
+    subtitle: event.subtitle ?? "A Black Sky live entertainment experience.",
+    date: event.date,
+    year: event.start_date.slice(0, 4) || "2026",
+    venue: event.venue,
+    city: event.city,
+    tag: event.genre,
+    accentColor,
+    glowColor: normalizeGlowColor(event.glow_color, accentColor),
+    image: event.image_url ?? FALLBACK_EVENT_IMAGE,
+    vendorUrl: event.vendor_url,
+    soldOut: event.status === "sold_out",
+  };
+}
+
+function EventsSectionState({ title, body }: { title: string; body: string }) {
+  return (
+    <div
+      className="relative flex min-h-[420px] w-full max-w-[720px] flex-col justify-end overflow-hidden"
+      style={{
+        background: "linear-gradient(135deg, rgba(168,85,247,0.16), rgba(14,165,233,0.1))",
+        border: "1px solid rgba(255,255,255,0.08)",
+        padding: "40px",
+      }}
+    >
+      <div
+        className="absolute inset-0"
+        aria-hidden="true"
+        style={{
+          background:
+            "radial-gradient(circle at 20% 20%, rgba(168,85,247,0.18), transparent 35%), radial-gradient(circle at 90% 80%, rgba(14,165,233,0.18), transparent 40%)",
+        }}
+      />
+      <div className="relative">
+        <div
+          style={{
+            width: 48,
+            height: 2,
+            background: "linear-gradient(90deg, #A855F7, transparent)",
+            marginBottom: 22,
+          }}
+        />
+        <h3
+          style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 900,
+            fontSize: "clamp(2rem, 4vw, 3rem)",
+            lineHeight: 0.95,
+            color: "#FFFFFF",
+            textTransform: "uppercase",
+            marginBottom: 12,
+          }}
+        >
+          {title}
+        </h3>
+        <p
+          style={{
+            maxWidth: 440,
+            fontFamily: "'Barlow', sans-serif",
+            fontSize: "0.95rem",
+            lineHeight: 1.7,
+            color: "rgba(255,255,255,0.56)",
+          }}
+        >
+          {body}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function EventSlideCard({ event, isActive }: { event: EventSlide; isActive: boolean }) {
   const [hovered, setHovered] = useState(false);
   const ctaTextColor = getContrastText(event.accentColor);
+  const detailHref = `/discover?event=${encodeURIComponent(event.slug)}`;
+  const href = event.soldOut ? detailHref : event.vendorUrl ?? detailHref;
+  const ctaLabel = event.soldOut ? "VIEW DETAILS" : event.vendorUrl ? "GET TICKETS" : "VIEW DETAILS";
+  const opensVendor = !event.soldOut && Boolean(event.vendorUrl);
 
   return (
     <motion.div
@@ -126,7 +161,6 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
         userSelect: "none",
       }}
     >
-      {/* Image Area */}
       <div className="relative overflow-hidden" style={{ aspectRatio: "16/9" }}>
         <img
           src={event.image}
@@ -139,14 +173,12 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
             pointerEvents: "none",
           }}
         />
-        {/* Base gradient */}
         <div
           className="absolute inset-0"
           style={{
             background: "linear-gradient(180deg, rgba(5,5,5,0.1) 0%, rgba(10,10,10,0.92) 100%)",
           }}
         />
-        {/* Bottom glow bloom */}
         <motion.div
           className="absolute inset-0"
           animate={{ opacity: isActive ? 1 : 0 }}
@@ -156,7 +188,6 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
           }}
         />
 
-        {/* Tag badge */}
         <div
           className="absolute top-5 left-5 flex items-center gap-2"
           style={{
@@ -188,7 +219,6 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
           </span>
         </div>
 
-        {/* Sold Out */}
         {event.soldOut && (
           <div
             className="absolute top-5 right-5 px-3 py-1"
@@ -209,9 +239,7 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
         )}
       </div>
 
-      {/* Content */}
       <div className="p-7">
-        {/* Accent line */}
         <div
           className="mb-5"
           style={{
@@ -249,7 +277,6 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
           {event.subtitle}
         </p>
 
-        {/* Meta info */}
         <div className="flex flex-col gap-2.5 mb-6">
           <div className="flex items-center gap-2.5">
             <Calendar size={12} style={{ color: event.accentColor, flexShrink: 0 }} />
@@ -281,12 +308,14 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
           </div>
         </div>
 
-        {/* CTA */}
         <div
           className="flex items-center justify-between pt-5"
           style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
         >
-          <motion.button
+          <motion.a
+            href={href}
+            target={opensVendor ? "_blank" : undefined}
+            rel={opensVendor ? "noreferrer" : undefined}
             whileHover={{
               backgroundColor: event.accentColor,
               color: ctaTextColor,
@@ -314,10 +343,11 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
               cursor: "pointer",
               minHeight: 42,
               padding: "0 18px",
+              textDecoration: "none",
               boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.04)`,
             }}
           >
-            {event.soldOut ? "NOTIFY ME" : "GET TICKETS"}
+            {ctaLabel}
             <ArrowRight
               size={12}
               style={{
@@ -325,8 +355,9 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
                 transition: "transform 0.3s",
               }}
             />
-          </motion.button>
-          <span
+          </motion.a>
+          {/* Reserved year marker for future event-card metadata. */}
+          {/* <span
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",
               fontWeight: 700,
@@ -335,8 +366,8 @@ function EventSlideCard({ event, isActive }: { event: Event; isActive: boolean }
               color: "rgba(255,255,255,0.72)",
             }}
           >
-            BSE — 2026
-          </span>
+            BSE - {event.year}
+          </span> */}
         </div>
       </div>
     </motion.div>
@@ -347,11 +378,26 @@ export function EventsSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const [activeIndex, setActiveIndex] = useState(0);
-  const [dragStartX, setDragStartX] = useState(0);
   const x = useMotionValue(0);
+  const { data, isError, isLoading } = useQuery({
+    queryKey: ["landing-events", "upcoming"],
+    queryFn: () => getPublicEvents({ timeframe: "upcoming", availability: "all", perPage: 8 }),
+    staleTime: 60_000,
+  });
+
+  const events = useMemo(() => (data?.data ?? []).map(mapPublicEvent), [data]);
   const TOTAL = events.length;
 
+  useEffect(() => {
+    setActiveIndex(0);
+    x.set(0);
+  }, [TOTAL, x]);
+
   const goTo = (index: number) => {
+    if (TOTAL === 0) {
+      return;
+    }
+
     const clamped = Math.max(0, Math.min(index, TOTAL - 1));
     setActiveIndex(clamped);
     animate(x, -(clamped * (CARD_WIDTH + GAP)), {
@@ -362,7 +408,12 @@ export function EventsSection() {
     });
   };
 
-  const handleDragEnd = (_: any, info: { offset: { x: number }; velocity: { x: number } }) => {
+  const handleDragEnd = (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
+    if (TOTAL <= 1) {
+      goTo(0);
+      return;
+    }
+
     const swipeThreshold = CARD_WIDTH * 0.25;
     const velThreshold = 500;
     if (info.offset.x < -swipeThreshold || info.velocity.x < -velThreshold) {
@@ -374,8 +425,9 @@ export function EventsSection() {
     }
   };
 
-  const maxDrag = -((TOTAL - 1) * (CARD_WIDTH + GAP));
-  const progressPct = (activeIndex / (TOTAL - 1)) * 100;
+  const maxDrag = TOTAL > 1 ? -((TOTAL - 1) * (CARD_WIDTH + GAP)) : 0;
+  const progressPct = TOTAL > 1 ? (activeIndex / (TOTAL - 1)) * 100 : TOTAL === 1 ? 100 : 0;
+  const currentCount = TOTAL > 0 ? activeIndex + 1 : 0;
 
   return (
     <section
@@ -384,7 +436,6 @@ export function EventsSection() {
       className="relative py-32 overflow-hidden"
       style={{ background: "#080808" }}
     >
-      {/* BG glow */}
       <div
         className="absolute pointer-events-none"
         style={{
@@ -398,7 +449,6 @@ export function EventsSection() {
       />
 
       <div className="max-w-[1600px] mx-auto">
-        {/* Header row */}
         <div className="px-8 md:px-16 flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12">
           <div>
             <motion.div
@@ -430,60 +480,59 @@ export function EventsSection() {
             </motion.h2>
           </div>
 
-          {/* Counter + Nav */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.35, duration: 0.6 }}
-            className="flex items-center gap-4 flex-shrink-0"
+            className="flex flex-wrap items-center gap-3 md:gap-4 flex-shrink-0"
           >
-            {/* Count */}
             <div className="flex items-baseline gap-1">
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "2rem", color: "#fff", lineHeight: 1 }}>
-                {String(activeIndex + 1).padStart(2, "0")}
+                {String(currentCount).padStart(2, "0")}
               </span>
               <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 400, fontSize: "1rem", color: "rgba(255,255,255,0.25)", lineHeight: 1 }}>
                 /{String(TOTAL).padStart(2, "0")}
               </span>
             </div>
 
-            {/* Prev / Next buttons */}
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => goTo(activeIndex - 1)}
-                disabled={activeIndex === 0}
+                disabled={activeIndex === 0 || TOTAL <= 1}
                 className="flex items-center justify-center transition-all duration-300"
                 style={{
                   width: 48,
                   height: 48,
                   border: "1px solid rgba(255,255,255,0.12)",
-                  background: activeIndex === 0 ? "transparent" : "rgba(168,85,247,0.08)",
-                  color: activeIndex === 0 ? "rgba(255,255,255,0.2)" : "#fff",
-                  cursor: activeIndex === 0 ? "not-allowed" : "pointer",
+                  background: activeIndex === 0 || TOTAL <= 1 ? "transparent" : "rgba(168,85,247,0.08)",
+                  color: activeIndex === 0 || TOTAL <= 1 ? "rgba(255,255,255,0.2)" : "#fff",
+                  cursor: activeIndex === 0 || TOTAL <= 1 ? "not-allowed" : "pointer",
                 }}
               >
                 <ChevronLeft size={20} />
               </button>
               <button
+                type="button"
                 onClick={() => goTo(activeIndex + 1)}
-                disabled={activeIndex === TOTAL - 1}
+                disabled={activeIndex === TOTAL - 1 || TOTAL <= 1}
                 className="flex items-center justify-center transition-all duration-300"
                 style={{
                   width: 48,
                   height: 48,
                   border: "1px solid rgba(255,255,255,0.12)",
-                  background: activeIndex === TOTAL - 1 ? "transparent" : "rgba(168,85,247,0.08)",
-                  color: activeIndex === TOTAL - 1 ? "rgba(255,255,255,0.2)" : "#fff",
-                  cursor: activeIndex === TOTAL - 1 ? "not-allowed" : "pointer",
+                  background: activeIndex === TOTAL - 1 || TOTAL <= 1 ? "transparent" : "rgba(168,85,247,0.08)",
+                  color: activeIndex === TOTAL - 1 || TOTAL <= 1 ? "rgba(255,255,255,0.2)" : "#fff",
+                  cursor: activeIndex === TOTAL - 1 || TOTAL <= 1 ? "not-allowed" : "pointer",
                 }}
               >
                 <ChevronRight size={20} />
               </button>
             </div>
 
-            {/* View All */}
-            <button
-              className="hidden lg:flex items-center gap-2 px-6 py-3 transition-all duration-300"
+            <a
+              href="/discover"
+              className="flex items-center gap-2 px-4 py-3 md:px-6 transition-all duration-300 whitespace-nowrap"
               style={{
                 border: "1px solid rgba(168,85,247,0.3)",
                 fontFamily: "'Barlow Condensed', sans-serif",
@@ -493,43 +542,60 @@ export function EventsSection() {
                 color: "#A855F7",
                 background: "rgba(168,85,247,0.05)",
                 cursor: "pointer",
+                textDecoration: "none",
               }}
             >
               ALL EVENTS
               <ArrowRight size={12} />
-            </button>
+            </a>
           </motion.div>
         </div>
 
-        {/* Slider Track */}
         <div
           className="relative overflow-hidden"
           style={{ paddingLeft: "clamp(2rem, 4vw, 8rem)" }}
         >
           <motion.div
             drag="x"
-            style={{ x, display: "flex", gap: GAP, cursor: "grab" }}
+            style={{ x, display: "flex", gap: GAP, cursor: TOTAL > 1 ? "grab" : "default" }}
             dragConstraints={{ left: maxDrag, right: 0 }}
             dragElastic={0.08}
-            onDragStart={(_, info) => setDragStartX(info.point.x)}
             onDragEnd={handleDragEnd}
-            whileTap={{ cursor: "grabbing" }}
+            whileTap={{ cursor: TOTAL > 1 ? "grabbing" : "default" }}
           >
-            {events.map((event) => (
+            {isLoading && (
+              <EventsSectionState
+                title="Loading upcoming shows"
+                body="Fetching the latest published events from the Black Sky event catalog."
+              />
+            )}
+
+            {isError && (
+              <EventsSectionState
+                title="Events unavailable"
+                body="The event catalog could not be loaded right now. The full listing is still available from Discover."
+              />
+            )}
+
+            {!isLoading && !isError && TOTAL === 0 && (
+              <EventsSectionState
+                title="No upcoming shows yet"
+                body="Published events with future dates will appear here automatically after they are added from admin."
+              />
+            )}
+
+            {!isLoading && !isError && events.map((event, index) => (
               <EventSlideCard
                 key={event.id}
                 event={event}
-                isActive={event.id === events[activeIndex].id}
+                isActive={index === activeIndex}
               />
             ))}
-            {/* Trailing spacer */}
             <div style={{ width: "clamp(2rem, 4vw, 6rem)", flexShrink: 0 }} />
           </motion.div>
         </div>
 
-        {/* Bottom: Progress + Dots */}
         <div className="px-8 md:px-16 mt-10 flex items-center justify-between gap-8">
-          {/* Progress bar */}
           <div
             className="flex-1 relative overflow-hidden"
             style={{ height: 2, background: "rgba(255,255,255,0.07)", maxWidth: 320 }}
@@ -547,11 +613,12 @@ export function EventsSection() {
             />
           </div>
 
-          {/* Dot indicators */}
           <div className="flex items-center gap-2">
-            {events.map((_, i) => (
+            {events.map((event, i) => (
               <button
-                key={i}
+                key={event.id}
+                type="button"
+                aria-label={`Show ${event.title}`}
                 onClick={() => goTo(i)}
                 style={{
                   width: i === activeIndex ? 24 : 8,
@@ -568,7 +635,6 @@ export function EventsSection() {
             ))}
           </div>
 
-          {/* Drag hint */}
           <span
             style={{
               fontFamily: "'Barlow Condensed', sans-serif",

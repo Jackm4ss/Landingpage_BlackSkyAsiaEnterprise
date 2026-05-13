@@ -55,8 +55,8 @@ function BlogFeature({ post }: { post: BlogPostSummary }) {
             {formatDate(post.published_at)}
           </span>
         </div>
-        <Link to={`/blog/${post.slug}`}>
-          <span>Read Feature</span>
+        <Link to={`/news/${post.slug}`}>
+          <span>Read News</span>
           <ArrowUpRight aria-hidden="true" />
         </Link>
       </div>
@@ -67,7 +67,7 @@ function BlogFeature({ post }: { post: BlogPostSummary }) {
 function BlogPostCard({ post }: { post: BlogPostSummary }) {
   return (
     <article className="blog-post-card">
-      <Link to={`/blog/${post.slug}`} aria-label={`Read ${post.title}`}>
+      <Link to={`/news/${post.slug}`} aria-label={`Read ${post.title}`}>
         <img src={post.featured_image ?? FALLBACK_IMAGE} alt={`${post.title} cover`} loading="lazy" />
       </Link>
       <div className="blog-post-card-body">
@@ -76,7 +76,7 @@ function BlogPostCard({ post }: { post: BlogPostSummary }) {
           <span>{post.reading_minutes} min read</span>
         </div>
         <h3>
-          <Link to={`/blog/${post.slug}`}>{post.title}</Link>
+          <Link to={`/news/${post.slug}`}>{post.title}</Link>
         </h3>
         <p>{post.excerpt}</p>
         <div className="blog-card-meta">
@@ -109,7 +109,7 @@ export function BlogPage() {
   const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
-    document.title = "Blog | Black Sky Enterprise";
+    document.title = "News | Black Sky Enterprise";
   }, []);
 
   const query: BlogPostQuery = {
@@ -153,25 +153,28 @@ export function BlogPage() {
       <main className="blog-page">
         <section className="blog-hero">
           <div>
-            <span>Black Sky Blog</span>
-            <h1>Concert stories, guides, and live culture intelligence</h1>
+            <div className="blog-hero-kicker">
+              <div aria-hidden="true" />
+              <span>Latest News</span>
+            </div>
+            <h1>News &amp; Media</h1>
           </div>
           <p>
-            Editorial content built for fans, artists, venues, and search discovery. Read practical
-            concert guides, artist stories, and behind-the-scenes notes from the Black Sky team.
+            Updates built for fans, artists, venues, and search discovery. Read practical concert
+            announcements, artist stories, and behind-the-scenes notes from the Black Sky team.
           </p>
         </section>
 
-        <section className="blog-index-section" aria-label="Blog posts">
+        <section className="blog-index-section" aria-label="News posts">
           <div className="blog-filter-bar">
             <label className="blog-search-field">
               <Search aria-hidden="true" />
-              <span className="sr-only">Search blog posts</span>
+              <span className="sr-only">Search news posts</span>
               <input
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search articles, artists, venues..."
+                placeholder="Search news, artists, venues..."
               />
             </label>
 
@@ -209,28 +212,28 @@ export function BlogPage() {
 
           <div className="blog-section-heading">
             <div>
-              <span>Latest Articles</span>
-              <h2>{activeCategoryName ?? "All Editorial"}</h2>
+              <span>Latest News</span>
+              <h2>{activeCategoryName ?? "All News"}</h2>
             </div>
-            <p>Cursor paginated articles with category and tag filters for scalable discovery.</p>
+            <p>Cursor paginated news with category and tag filters for scalable discovery.</p>
           </div>
 
           {postsQuery.isLoading ? (
             <div className="blog-empty-state">
               <Clock3 aria-hidden="true" />
-              <strong>Loading articles</strong>
-              <span>Preparing the Black Sky editorial catalog.</span>
+              <strong>Loading news</strong>
+              <span>Preparing the Black Sky news catalog.</span>
             </div>
           ) : postsQuery.isError ? (
             <div className="blog-empty-state">
               <Clock3 aria-hidden="true" />
-              <strong>Articles could not load</strong>
+              <strong>News could not load</strong>
               <span>Please refresh the page or try again shortly.</span>
             </div>
           ) : posts.length === 0 ? (
             <div className="blog-empty-state">
               <Search aria-hidden="true" />
-              <strong>No articles found</strong>
+              <strong>No news found</strong>
               <span>Try clearing filters or searching a broader keyword.</span>
             </div>
           ) : (

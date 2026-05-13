@@ -3,39 +3,49 @@
 use App\Models\BlogPost;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/blog', function () {
+Route::redirect('/blog', '/news')->name('blog.index');
+
+Route::get('/blog/{slug}', fn (string $slug) => redirect('/news/' . $slug))
+    ->name('blog.show');
+
+Route::get('/news', function () {
     return view('app', [
         'pageMeta' => [
-            'title' => 'Blog | Black Sky Enterprise',
-            'description' => 'Read Black Sky Enterprise concert guides, artist stories, venue intelligence, and live entertainment insights across Southeast Asia.',
-            'canonical' => url('/blog'),
+            'title' => 'News | Black Sky Enterprise',
+            'description' => 'Read Black Sky Enterprise concert news, announcements, artist stories, venue intelligence, and live entertainment insights across Southeast Asia.',
+            'canonical' => url('/news'),
             'type' => 'website',
         ],
         'structuredData' => [
             [
                 '@context' => 'https://schema.org',
                 '@type' => 'CollectionPage',
-                'name' => 'Black Sky Blog',
-                'description' => 'Concert guides, artist stories, and live entertainment insights from Black Sky Enterprise.',
-                'url' => url('/blog'),
+                'name' => 'Black Sky News',
+                'description' => 'Concert news, announcements, artist stories, and live entertainment insights from Black Sky Enterprise.',
+                'url' => url('/news'),
             ],
         ],
     ]);
-})->name('blog.index');
+})->name('news.index');
 
-Route::get('/blog/{slug}', function (string $slug) {
+Route::get('/news/{slug}', function (string $slug) {
     $post = BlogPost::query()
         ->published()
         ->with(['author:id,name,slug', 'category:id,name,slug'])
         ->where('slug', $slug)
         ->firstOrFail();
+    $canonicalUrl = $post->canonical_url;
+
+    if (! $canonicalUrl || str_contains($canonicalUrl, '/blog/')) {
+        $canonicalUrl = url('/news/' . $post->slug);
+    }
 
     return view('app', [
         'pageMeta' => [
             'title' => $post->seo_title,
             'description' => $post->seo_description,
             'keywords' => $post->meta_keywords,
-            'canonical' => $post->canonical_url ?: url('/blog/' . $post->slug),
+            'canonical' => $canonicalUrl,
             'image' => $post->og_image ?: $post->featured_image,
             'type' => 'article',
         ],
@@ -58,11 +68,11 @@ Route::get('/blog/{slug}', function (string $slug) {
                     'name' => 'Black Sky Enterprise',
                     'url' => url('/'),
                 ],
-                'mainEntityOfPage' => url('/blog/' . $post->slug),
+                'mainEntityOfPage' => url('/news/' . $post->slug),
             ],
         ],
     ]);
-})->name('blog.show');
+})->name('news.show');
 
 Route::view('/{path?}', 'app')
     ->where('path', '^(?!api|sanctum|storage|build|admin).*$')

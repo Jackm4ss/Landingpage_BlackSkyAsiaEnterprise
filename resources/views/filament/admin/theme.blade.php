@@ -1315,6 +1315,19 @@
         text-transform: uppercase;
     }
 
+    .bsa-events-field .bsa-events-required-mark {
+        display: inline-block;
+        margin-left: 4px;
+        color: #fb174f;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0;
+        line-height: 1;
+        text-transform: none;
+        vertical-align: top;
+    }
+
     .bsa-events-total strong {
         display: block;
         margin-top: 4px;

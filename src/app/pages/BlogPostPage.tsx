@@ -64,13 +64,13 @@ export function BlogPostPage() {
           <section className="blog-article-empty">
             <Tag aria-hidden="true" />
             <strong>Article not found</strong>
-            <Link to="/blog">Back to Blog</Link>
+            <Link to="/news">Back to News</Link>
           </section>
         ) : (
           <article className="blog-article">
-            <Link className="blog-back-link" to="/blog">
+            <Link className="blog-back-link" to="/news">
               <ArrowLeft aria-hidden="true" />
-              Blog
+              News
             </Link>
 
             <header className="blog-article-hero">
@@ -103,7 +103,7 @@ export function BlogPostPage() {
                 <strong>Tags</strong>
                 <div>
                   {post.tags.map((tag) => (
-                    <Link key={tag.slug} to={`/blog?tag=${tag.slug}`}>
+                    <Link key={tag.slug} to={`/news?tag=${tag.slug}`}>
                       {tag.name}
                     </Link>
                   ))}

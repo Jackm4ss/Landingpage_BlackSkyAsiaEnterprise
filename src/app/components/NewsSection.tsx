@@ -342,7 +342,8 @@ export function NewsSection() {
             </motion.h2>
           </div>
 
-          <motion.button
+          <motion.a
+            href="/news"
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -357,12 +358,13 @@ export function NewsSection() {
               background: "rgba(225,29,72,0.05)",
               cursor: "pointer",
               flexShrink: 0,
+              textDecoration: "none",
             }}
             whileHover={{ background: "rgba(225,29,72,0.1)" }}
           >
-            ALL ARTICLES
+            ALL NEWS
             <ArrowRight size={12} />
-          </motion.button>
+          </motion.a>
         </div>
 
         {/* Bento Layout */}

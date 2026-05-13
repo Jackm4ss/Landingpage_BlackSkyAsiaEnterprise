@@ -203,13 +203,13 @@
 
                         <div class="bsa-events-form-grid bsa-events-form-grid-simple">
                             <label class="bsa-events-field">
-                                <span>Event Name</span>
+                                <span>Event Name<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                 <input id="event-form-title-input" name="title" type="text" wire:model="form.title" placeholder="IGNITE FESTIVAL">
                                 @error('form.title') <em>{{ $message }}</em> @enderror
                             </label>
 
                             <label class="bsa-events-field">
-                                <span>Genre</span>
+                                <span>Genre<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                 <select id="event-form-genre" name="genre" wire:model="form.genre">
                                     <option value="">Select genre</option>
                                     @foreach ($this->genreOptions() as $genreValue => $genreLabel)
@@ -226,7 +226,7 @@
                             </label>
 
                             <div class="bsa-events-field bsa-events-field-wide">
-                                <span>Event Date Range</span>
+                                <span>Event Date Range<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                 <div
                                     wire:ignore
                                     data-bsa-date-range-picker
@@ -240,19 +240,19 @@
                             </div>
 
                             <label class="bsa-events-field">
-                                <span>Venue</span>
+                                <span>Venue<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                 <input id="event-form-venue" name="venue" type="text" wire:model="form.venue" placeholder="Venue name">
                                 @error('form.venue') <em>{{ $message }}</em> @enderror
                             </label>
 
                             <label class="bsa-events-field">
-                                <span>City</span>
+                                <span>City<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                 <input id="event-form-city" name="city" type="text" wire:model="form.city" placeholder="Kuala Lumpur">
                                 @error('form.city') <em>{{ $message }}</em> @enderror
                             </label>
 
                             <div class="bsa-events-field">
-                                <span>Country</span>
+                                <span>Country<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                 <div
                                     wire:ignore
                                     data-bsa-country-dropdown
@@ -269,7 +269,7 @@
                             </label>
 
                             <label class="bsa-events-field">
-                                <span>Visibility</span>
+                                <span>Visibility<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                 <select id="event-form-status" name="status" wire:model="form.status">
                                     <option value="published">Published</option>
                                     <option value="draft">Draft</option>
@@ -285,7 +285,12 @@
 
                             <div class="bsa-events-upload bsa-events-field-wide">
                                 <label class="bsa-events-field">
-                                    <span>Artwork Upload</span>
+                                    <span>
+                                        Artwork Upload
+                                        @if (! $editingEventId)
+                                            <sup class="bsa-events-required-mark" aria-hidden="true">*</sup>
+                                        @endif
+                                    </span>
                                     <input
                                         id="event-form-image-file"
                                         name="event_image"
@@ -333,13 +338,13 @@
                                 </label>
 
                                 <label class="bsa-events-field">
-                                    <span>Timezone</span>
+                                    <span>Timezone<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                     <input id="event-form-timezone" name="timezone" type="text" wire:model="form.timezone" placeholder="Asia/Kuala_Lumpur">
                                     @error('form.timezone') <em>{{ $message }}</em> @enderror
                                 </label>
 
                                 <label class="bsa-events-field">
-                                    <span>Accent Color</span>
+                                    <span>Accent Color<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                     <input id="event-form-accent" name="accent_color" type="color" wire:model="form.accent_color">
                                     @error('form.accent_color') <em>{{ $message }}</em> @enderror
                                 </label>

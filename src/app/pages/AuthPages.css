@@ -683,7 +683,7 @@
   position: relative;
   display: block;
   width: calc(100% - 64px);
-  min-height: 248px;
+  min-height: clamp(212px, 16vw, 224px);
   margin: 0 32px;
   overflow: hidden;
   border: 0;
@@ -707,11 +707,10 @@
 
 .login-page__info-shape {
   position: absolute;
-  top: 0;
-  right: 0;
+  inset: 0;
   z-index: 0;
-  width: 1094px;
-  height: 249px;
+  width: 100%;
+  height: 100%;
   color: #ffffff;
   pointer-events: none;
   user-select: none;
@@ -726,11 +725,12 @@
   position: relative;
   z-index: 1;
   display: flex;
-  min-height: 228px;
+  min-height: inherit;
+  box-sizing: border-box;
   flex-direction: column;
-  gap: 20px;
+  gap: clamp(16px, 1.3vw, 18px);
   justify-content: flex-start;
-  padding: 24px;
+  padding: clamp(26px, 2.2vw, 30px) clamp(24px, 2.2vw, 30px) clamp(42px, 3vw, 48px);
 }
 
 .login-page__info-panel--studio .login-page__info-title {
@@ -740,7 +740,7 @@
   overflow: hidden;
   color: #171717;
   font-family: "Barlow Condensed", sans-serif;
-  font-size: 36px;
+  font-size: clamp(32px, 2.8vw, 36px);
   font-weight: 800;
   line-height: 1;
   text-transform: uppercase;
@@ -752,7 +752,7 @@
   overflow: hidden;
   color: rgba(23, 23, 23, 0.72);
   font-family: "Barlow", sans-serif;
-  font-size: 18px;
+  font-size: clamp(16px, 1.4vw, 18px);
   font-weight: 400;
   line-height: 28px;
 }

@@ -100,7 +100,10 @@ function HeroShowcase({ events }: { events: PublicEvent[] }) {
     return (
       <section className="discover-hero discover-hero-empty" aria-label="Featured events">
         <div className="discover-hero-copy">
-          <span>Discover</span>
+          <div className="discover-hero-kicker">
+            <div aria-hidden="true" />
+            <span>Discover</span>
+          </div>
           <h1>Find the next Black Sky show</h1>
           <p>Explore upcoming concerts, festivals, and live entertainment across Southeast Asia.</p>
         </div>
@@ -116,7 +119,10 @@ function HeroShowcase({ events }: { events: PublicEvent[] }) {
       <div className="discover-hero-shade" />
       <div className="discover-hero-inner">
         <div className="discover-hero-copy">
-          <span>Featured Event</span>
+          <div className="discover-hero-kicker">
+            <div aria-hidden="true" />
+            <span>Featured Event</span>
+          </div>
           <h1>{activeEvent.title}</h1>
           <p>{activeEvent.subtitle ?? "A Black Sky live experience coming to the region."}</p>
           <div className="discover-hero-meta">

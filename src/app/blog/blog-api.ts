@@ -65,13 +65,13 @@ export async function getBlogPosts(query: BlogPostQuery = {}) {
   if (query.cursor) params.set("cursor", query.cursor);
   params.set("per_page", String(query.perPage ?? 9));
 
-  const { data } = await http.get<BlogPostsResponse>(`/api/v1/blog?${params}`);
+  const { data } = await http.get<BlogPostsResponse>(`/api/v1/news?${params}`);
 
   return data;
 }
 
 export async function getBlogPost(slug: string) {
-  const { data } = await http.get<{ data: BlogPostDetail }>(`/api/v1/blog/${slug}`);
+  const { data } = await http.get<{ data: BlogPostDetail }>(`/api/v1/news/${slug}`);
 
   return data.data;
 }

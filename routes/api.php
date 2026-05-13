@@ -27,6 +27,14 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:60,1')
         ->name('api.v1.events.index');
 
+    Route::get('/news', [PublicBlogPostController::class, 'index'])
+        ->middleware('throttle:60,1')
+        ->name('api.v1.news.index');
+
+    Route::get('/news/{slug}', [PublicBlogPostController::class, 'show'])
+        ->middleware('throttle:60,1')
+        ->name('api.v1.news.show');
+
     Route::get('/blog', [PublicBlogPostController::class, 'index'])
         ->middleware('throttle:60,1')
         ->name('api.v1.blog.index');
