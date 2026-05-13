@@ -238,11 +238,14 @@ class DemoSeeder extends Seeder
         $role = Role::findOrCreate('user');
         $sources = ['instagram', 'instagram', 'facebook', 'tiktok', 'google', 'newsletter', 'partner', 'direct', 'other'];
         $countries = ['MY', 'MY', 'MY', 'ID', 'SG', 'TH', 'PH', 'VN', 'BN', 'JP', 'KR', 'AU'];
+        $genders = ['male', 'female', 'prefer_not_to_say'];
+        $ticketTypes = ['General Admission', 'Premium Zone', 'VIP Deck', 'Early Bird', 'Meet & Greet'];
+        $transactionStatuses = ['confirmed', 'confirmed', 'confirmed', 'confirmed', 'pending'];
         $events = Event::query()->where('status', 'published')->orderBy('start_date')->get();
 
         for ($i = 1; $i <= self::DEMO_TOTAL; $i++) {
-            $source = $sources[($i - 1) % count($sources)];
-            $country = $countries[($i - 1) % count($countries)];
+            $source = $sources[array_rand($sources)];
+            $country = $countries[array_rand($countries)];
             $email = 'demo.member.' . str_pad((string) $i, 3, '0', STR_PAD_LEFT) . '@blacksky.test';
 
             $user = User::query()->updateOrCreate(
@@ -255,46 +258,63 @@ class DemoSeeder extends Seeder
                     'registration_source' => $source,
                     'registration_country_code' => $country,
                     'registration_referrer' => $source === 'direct' ? null : 'https://' . $source . '.com/blackskyenterprise',
-                    'date_of_birth' => now()->subYears(20 + ($i % 18))->subDays($i)->toDateString(),
-                    'gender' => ['male', 'female', 'prefer_not_to_say'][$i % 3],
+                    'date_of_birth' => now()->subYears(random_int(19, 42))->subDays(random_int(1, 365))->toDateString(),
+                    'gender' => $genders[array_rand($genders)],
                     'is_active' => true,
                 ],
             );
             $user->syncRoles([$role]);
 
-            if ($events->isNotEmpty() && $i % 3 !== 0) {
-                $event = $events[($i - 1) % $events->count()];
+            if ($events->isNotEmpty()) {
+                Bookmark::query()->where('user_id', $user->id)->delete();
 
-                Bookmark::query()->updateOrCreate([
-                    'user_id' => $user->id,
-                    'event_id' => $event->id,
-                ]);
-            }
+                $savedCount = random_int(1, min(4, $events->count()));
 
-            if ($events->isNotEmpty() && $i % 4 !== 0) {
-                $event = $events[($i + 2) % $events->count()];
-                SyncedTransaction::query()->updateOrCreate(
-                    [
-                        'vendor' => 'ticket2u',
-                        'external_order_id' => 'BSE-DEMO-' . str_pad((string) $i, 5, '0', STR_PAD_LEFT),
-                    ],
-                    [
+                foreach ($events->shuffle()->take($savedCount) as $event) {
+                    Bookmark::query()->updateOrCreate([
                         'user_id' => $user->id,
                         'event_id' => $event->id,
-                        'buyer_email' => $user->email,
-                        'event_title' => $event->title,
-                        'ticket_type' => $i % 5 === 0 ? 'VIP Deck' : 'General Admission',
-                        'quantity' => 1 + ($i % 4),
-                        'total_amount' => 188 + (($i % 6) * 75),
-                        'currency' => 'MYR',
-                        'status' => $i % 11 === 0 ? 'pending' : 'confirmed',
-                        'purchased_at' => now()->subDays($i % 45),
-                        'raw_payload' => [
-                            'source' => 'demo_seed',
-                            'country' => $country,
+                    ]);
+                }
+            }
+
+            if ($events->isNotEmpty()) {
+                SyncedTransaction::query()
+                    ->where('user_id', $user->id)
+                    ->where('vendor', 'ticket2u')
+                    ->where('external_order_id', 'like', 'BSE-DEMO-%')
+                    ->delete();
+
+                $transactionCount = random_int(1, min(3, $events->count()));
+
+                foreach ($events->shuffle()->take($transactionCount)->values() as $index => $event) {
+                    $ticketType = $ticketTypes[array_rand($ticketTypes)];
+                    $quantity = random_int(1, 4);
+
+                    SyncedTransaction::query()->updateOrCreate(
+                        [
+                            'vendor' => 'ticket2u',
+                            'external_order_id' => 'BSE-DEMO-' . str_pad((string) $i, 3, '0', STR_PAD_LEFT) . '-' . str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
                         ],
-                    ],
-                );
+                        [
+                            'user_id' => $user->id,
+                            'event_id' => $event->id,
+                            'buyer_email' => $user->email,
+                            'event_title' => $event->title,
+                            'ticket_type' => $ticketType,
+                            'quantity' => $quantity,
+                            'total_amount' => $quantity * random_int(148, 488),
+                            'currency' => 'MYR',
+                            'status' => $transactionStatuses[array_rand($transactionStatuses)],
+                            'purchased_at' => now()->subDays(random_int(1, 45))->subMinutes(random_int(0, 720)),
+                            'raw_payload' => [
+                                'source' => 'demo_seed',
+                                'country' => $country,
+                                'registration_source' => $source,
+                            ],
+                        ],
+                    );
+                }
             }
         }
     }
