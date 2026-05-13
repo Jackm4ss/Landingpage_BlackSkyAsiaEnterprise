@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             EventSeeder::class,
             BlogSeeder::class,
             PortfolioWorkSeeder::class,
+            DemoSeeder::class,
         ]);
     }
 }
