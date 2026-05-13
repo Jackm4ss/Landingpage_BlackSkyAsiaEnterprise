@@ -239,6 +239,17 @@
                                 @error('form.end_date') <em>{{ $message }}</em> @enderror
                             </div>
 
+                            <div class="bsa-events-field">
+                                <span>Start Time</span>
+                                <div
+                                    wire:ignore
+                                    data-bsa-time-picker
+                                    data-time-input="event-form-start-time"
+                                ></div>
+                                <input id="event-form-start-time" name="start_time" type="hidden" wire:model="form.start_time">
+                                @error('form.start_time') <em>{{ $message }}</em> @enderror
+                            </div>
+
                             <label class="bsa-events-field">
                                 <span>Venue<sup class="bsa-events-required-mark" aria-hidden="true">*</sup></span>
                                 <input id="event-form-venue" name="venue" type="text" wire:model="form.venue" placeholder="Venue name">
@@ -318,13 +329,117 @@
                             </div>
                         </div>
 
+                        <details class="bsa-events-form-section bsa-events-advanced bsa-events-content-builder" open>
+                            <summary>
+                                <span>Public Detail Sections</span>
+                                <small>These blocks feed the public event detail page. Core details still use the event fields above.</small>
+                            </summary>
+
+                            <div class="bsa-events-section-builder">
+                                <label class="bsa-events-field bsa-events-field-wide">
+                                    <span>Spotify Preview URL</span>
+                                    <input
+                                        id="event-form-spotify"
+                                        name="spotify_embed_url"
+                                        type="url"
+                                        wire:model="form.spotify_embed_url"
+                                        placeholder="https://open.spotify.com/artist/..."
+                                    >
+                                    @error('form.spotify_embed_url') <em>{{ $message }}</em> @enderror
+                                </label>
+
+                                <div class="bsa-events-section-add">
+                                    <label class="bsa-events-field">
+                                        <span>Section Type</span>
+                                        <select id="event-section-type" name="section_type" wire:model="sectionToAdd">
+                                            @foreach ($this->sectionOptions() as $sectionValue => $sectionLabel)
+                                                <option value="{{ $sectionValue }}">{{ $sectionLabel }}</option>
+                                            @endforeach
+                                        </select>
+                                    </label>
+
+                                    <button type="button" class="bsa-events-modal-secondary" wire:click="addEventSection">
+                                        Add Section
+                                    </button>
+                                </div>
+
+                                <div class="bsa-events-section-list">
+                                    @forelse (($form['sections'] ?? []) as $sectionIndex => $section)
+                                        <article class="bsa-events-section-block" wire:key="event-section-{{ $sectionIndex }}">
+                                            <div class="bsa-events-section-block-head">
+                                                <label class="bsa-events-field">
+                                                    <span>Type</span>
+                                                    <select wire:model="form.sections.{{ $sectionIndex }}.section_key">
+                                                        @foreach ($this->sectionOptions() as $sectionValue => $sectionLabel)
+                                                            <option value="{{ $sectionValue }}">{{ $sectionLabel }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error("form.sections.$sectionIndex.section_key") <em>{{ $message }}</em> @enderror
+                                                </label>
+
+                                                <label class="bsa-events-field">
+                                                    <span>Title</span>
+                                                    <input type="text" wire:model="form.sections.{{ $sectionIndex }}.title" placeholder="About">
+                                                    @error("form.sections.$sectionIndex.title") <em>{{ $message }}</em> @enderror
+                                                </label>
+
+                                                <label class="bsa-events-toggle bsa-events-section-toggle">
+                                                    <input type="checkbox" wire:model="form.sections.{{ $sectionIndex }}.is_enabled">
+                                                    <span>Enabled</span>
+                                                </label>
+
+                                                <button
+                                                    type="button"
+                                                    class="bsa-events-modal-close"
+                                                    wire:click="removeEventSection({{ $sectionIndex }})"
+                                                    aria-label="Remove section {{ $sectionIndex + 1 }}"
+                                                >
+                                                    <x-heroicon-o-x-mark />
+                                                </button>
+                                            </div>
+
+                                            <label class="bsa-events-field">
+                                                <span>Content</span>
+                                                @if ($this->sectionHelpText($section['section_key'] ?? 'custom'))
+                                                    <small>{{ $this->sectionHelpText($section['section_key'] ?? 'custom') }}</small>
+                                                @endif
+                                                <textarea
+                                                    rows="5"
+                                                    wire:model="form.sections.{{ $sectionIndex }}.content"
+                                                    placeholder="Write event detail content here. Leave blank to skip this section."
+                                                ></textarea>
+                                                @error("form.sections.$sectionIndex.content") <em>{{ $message }}</em> @enderror
+                                            </label>
+                                        </article>
+                                    @empty
+                                        <div class="bsa-events-section-empty">
+                                            <strong>No public detail sections yet</strong>
+                                            <span>Add a section when this event needs about text, ticket pricing, policies, or guides.</span>
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </details>
+
                         <details class="bsa-events-form-section bsa-events-advanced">
                             <summary>
                                 <span>More Options</span>
-                                <small>Custom page URL, display date, color, and search preview.</small>
+                                <small>Organizer, custom page URL, display date, color, and search preview.</small>
                             </summary>
 
                             <div class="bsa-events-form-grid">
+                                <label class="bsa-events-field">
+                                    <span>Organizer Name</span>
+                                    <input id="event-form-organizer-name" name="organizer_name" type="text" wire:model="form.organizer_name" placeholder="Black Sky Enterprise">
+                                    @error('form.organizer_name') <em>{{ $message }}</em> @enderror
+                                </label>
+
+                                <label class="bsa-events-field">
+                                    <span>Organizer URL</span>
+                                    <input id="event-form-organizer-url" name="organizer_url" type="url" wire:model="form.organizer_url" placeholder="https://...">
+                                    @error('form.organizer_url') <em>{{ $message }}</em> @enderror
+                                </label>
+
                                 <label class="bsa-events-field">
                                     <span>Page URL</span>
                                     <input id="event-form-slug" name="slug" type="text" wire:model="form.slug" placeholder="auto-from-title">

@@ -24,6 +24,7 @@ class PublicBlogPostController extends Controller
                 'excerpt',
                 'content',
                 'featured_image',
+                'og_image',
                 'meta_title',
                 'meta_description',
                 'status',
@@ -109,7 +110,7 @@ class PublicBlogPostController extends Controller
                 'meta_description' => $post->seo_description,
                 'meta_keywords' => $post->meta_keywords,
                 'canonical_url' => $this->canonicalUrl($post),
-                'og_image' => $post->og_image ?: $post->featured_image,
+                'og_image' => $post->og_image_url,
             ],
         ]);
     }
@@ -129,7 +130,7 @@ class PublicBlogPostController extends Controller
             'title' => $post->title,
             'slug' => $post->slug,
             'excerpt' => $post->excerpt,
-            'featured_image' => $post->featured_image,
+            'featured_image' => $post->featured_image_url,
             'published_at' => $post->published_at?->toIso8601String(),
             'updated_at' => $post->updated_at?->toIso8601String(),
             'reading_minutes' => $post->reading_minutes,

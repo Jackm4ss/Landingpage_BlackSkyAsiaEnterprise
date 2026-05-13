@@ -1,0 +1,60 @@
+.save-event-button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.055);
+  color: #fff;
+  cursor: pointer;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  padding: 0 14px;
+  text-transform: uppercase;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.save-event-button:hover:not(:disabled) {
+  border-color: rgba(14, 165, 233, 0.72);
+  background: rgba(14, 165, 233, 0.16);
+  transform: translateY(-1px);
+}
+
+.save-event-button[data-saved="true"] {
+  border-color: #0ea5e9;
+  background: #0ea5e9;
+  color: #fff;
+  box-shadow: 4px 4px 0 #02030a;
+}
+
+.save-event-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.save-event-button svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.save-event-button[data-saved="true"] svg {
+  fill: currentColor;
+}
+
+.save-event-button--compact {
+  min-height: 38px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  padding: 0 12px;
+}

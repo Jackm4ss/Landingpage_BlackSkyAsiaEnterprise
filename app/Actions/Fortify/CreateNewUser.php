@@ -15,6 +15,17 @@ class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules;
 
+    private const REGISTRATION_SOURCES = [
+        'direct',
+        'instagram',
+        'facebook',
+        'tiktok',
+        'google',
+        'newsletter',
+        'partner',
+        'other',
+    ];
+
     /**
      * Validate and create a newly registered user.
      *
@@ -37,12 +48,18 @@ class CreateNewUser implements CreatesNewUsers
             ],
             'password' => $this->passwordRules(),
             'terms' => ['accepted'],
+            'country_code' => ['required', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
+            'registration_source' => ['nullable', 'string', Rule::in(self::REGISTRATION_SOURCES)],
+            'registration_referrer' => ['nullable', 'string', 'max:2048'],
         ])->validate();
 
         $user = User::create([
             'name' => $input['name'],
             'email' => $email,
             'password' => Hash::make($input['password']),
+            'registration_source' => $input['registration_source'] ?? 'direct',
+            'registration_country_code' => Str::upper((string) $input['country_code']),
+            'registration_referrer' => $input['registration_referrer'] ?? null,
         ]);
 
         $user->assignRole(Role::findOrCreate('user'));

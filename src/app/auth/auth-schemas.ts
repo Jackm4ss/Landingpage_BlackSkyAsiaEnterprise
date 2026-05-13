@@ -45,6 +45,15 @@ export const registerSchema = z.object({
       .max(120, "Nama terlalu panjang."),
   ),
   email: emailSchema,
+  countryCode: z.preprocess(
+    emptyStringWhenMissing,
+    z
+      .string()
+      .trim()
+      .min(1, "Country wajib dipilih.")
+      .regex(/^[A-Za-z]{2}$/, "Pilih country yang valid.")
+      .transform((value) => value.toUpperCase()),
+  ),
   password: passwordSchema,
   acceptedTerms: z.preprocess(falseWhenMissing, z.boolean()).refine((value) => value, {
     message: "Setujui Terms & Conditions terlebih dahulu.",
@@ -57,6 +66,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z
   .object({
+    email: emailSchema,
     password: passwordSchema,
     passwordConfirmation: z.preprocess(
       emptyStringWhenMissing,

@@ -1,19 +1,19 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { format, parseISO } from "date-fns";
 import { motion, useInView } from "motion/react";
 import { ArrowRight, Clock, Tag } from "lucide-react";
+import { Link } from "react-router";
+import { getBlogPosts, type BlogPostSummary } from "../blog/blog-api";
 import GradientText from "./GradientText";
 
-const img1 =
-  "https://images.unsplash.com/photo-1739194029327-bb1b252cf9c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxTb3V0aGVhc3QlMjBBc2lhJTIwY29uY2VydCUyMG91dGRvb3IlMjBmZXN0aXZhbCUyMG5pZ2h0fGVufDF8fHx8MTc3ODIzOTQyNHww&ixlib=rb-4.1.0&q=80&w=1080";
-const img2 =
-  "https://images.unsplash.com/photo-1635942104748-c869be8c597c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNpYyUyMG5ld3MlMjBtYWdhemluZSUyMGVudGVydGFpbm1lbnQlMjBtZWRpYSUyMGRhcmt8ZW58MXx8fHwxNzc4MjM5NDI0fDA&ixlib=rb-4.1.0&q=80&w=1080";
-const img3 =
-  "https://images.unsplash.com/photo-1590699306463-dbb2b13c0ca0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNpYyUyMGVudGVydGFpbm1lbnQlMjBlZGl0b3JpYWwlMjBwaG90b2dyYXBoeSUyMGRhcmt8ZW58MXx8fHwxNzc4MjM5NDIxfDA&ixlib=rb-4.1.0&q=80&w=1080";
-const img4 =
-  "https://images.unsplash.com/photo-1561577328-58217edab062?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNpYyUyMGZlc3RpdmFsJTIwbmVvbiUyMGxpZ2h0cyUyMGNyb3dkJTIwZW5lcmd5fGVufDF8fHx8MTc3ODIzOTQxNnww&ixlib=rb-4.1.0&q=80&w=1080";
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1400&q=80";
+const CATEGORY_COLORS = ["#A855F7", "#0EA5E9", "#E11D48", "#F97316", "#14B8A6", "#FFB700"];
 
 interface Article {
   id: number;
+  slug: string;
   title: string;
   excerpt: string;
   category: string;
@@ -21,56 +21,31 @@ interface Article {
   date: string;
   readTime: string;
   image: string;
-  featured?: boolean;
 }
 
-const articles: Article[] = [
-  {
-    id: 1,
-    title: "Black Sky Enterprise Announces Mega Southeast Asia Tour for 2026",
-    excerpt:
-      "The region's leading concert promoter reveals an ambitious 8-country tour featuring over 20 international artists across 30+ shows — the largest live music undertaking in Southeast Asia's history.",
-    category: "ANNOUNCEMENT",
-    categoryColor: "#A855F7",
-    date: "MAY 2, 2026",
-    readTime: "4 MIN READ",
-    image: img1,
-    featured: true,
-  },
-  {
-    id: 2,
-    title: "BSE Media Secures Deal for Original SEA Music Documentary Series",
-    excerpt:
-      "Our media division lands exclusive rights to produce a 6-part documentary exploring the untold stories behind Southeast Asia's thriving live music culture.",
-    category: "MEDIA",
-    categoryColor: "#0EA5E9",
-    date: "APR 28, 2026",
-    readTime: "3 MIN READ",
-    image: img2,
-  },
-  {
-    id: 3,
-    title: "IGNITE Festival Reveals Phase 1 Lineup: 25 Artists Announced",
-    excerpt:
-      "The highly anticipated electronic music festival drops its first wave of names — a diverse mix of regional and international talent set to take over Axiata Arena this July.",
-    category: "LINEUP",
-    categoryColor: "#E11D48",
-    date: "APR 20, 2026",
-    readTime: "5 MIN READ",
-    image: img3,
-  },
-  {
-    id: 4,
-    title: "Why Malaysia is Becoming Southeast Asia's Live Music Capital",
-    excerpt:
-      "An in-depth editorial on how Kuala Lumpur has emerged as the epicenter of the region's booming concert economy, with BSE leading the charge.",
-    category: "EDITORIAL",
-    categoryColor: "#F97316",
-    date: "APR 15, 2026",
-    readTime: "7 MIN READ",
-    image: img4,
-  },
-];
+function formatDate(value: string | null) {
+  if (!value) {
+    return "PUBLISHED";
+  }
+
+  const date = parseISO(value);
+
+  return Number.isNaN(date.getTime()) ? "PUBLISHED" : format(date, "MMM d, yyyy").toUpperCase();
+}
+
+function toArticle(post: BlogPostSummary, index: number): Article {
+  return {
+    id: post.id,
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt ?? "Read the latest Black Sky Enterprise update.",
+    category: (post.category?.name ?? "News").toUpperCase(),
+    categoryColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+    date: formatDate(post.published_at),
+    readTime: `${post.reading_minutes} MIN READ`,
+    image: post.featured_image ?? FALLBACK_IMAGE,
+  };
+}
 
 function ArticleCard({
   article,
@@ -106,10 +81,16 @@ function ArticleCard({
         transition: "border-color 0.4s",
       }}
     >
+      <Link
+        to={`/news/${article.slug}`}
+        className="absolute inset-0 z-20"
+        aria-label={`Read ${article.title}`}
+      />
       <img
         src={article.image}
         alt={article.title}
         className="absolute inset-0 w-full h-full object-cover"
+        loading={isFeature ? "eager" : "lazy"}
         style={{
           transform: hovered ? "scale(1.06)" : "scale(1)",
           transition: "transform 0.8s ease",
@@ -132,7 +113,6 @@ function ArticleCard({
         }}
       />
 
-      {/* Category */}
       <div
         className="absolute top-5 left-5"
         style={{
@@ -153,7 +133,6 @@ function ArticleCard({
         </span>
       </div>
 
-      {/* Content */}
       <div
         className="absolute inset-x-0 bottom-0"
         style={{ padding: isFeature ? "clamp(1.4rem, 2.4vw, 2.25rem)" : "24px" }}
@@ -191,7 +170,6 @@ function ArticleCard({
           {article.excerpt}
         </p>
 
-        {/* Meta */}
         <div
           className="flex items-center justify-between"
           style={{
@@ -263,7 +241,14 @@ function ArticleCard({
 export function NewsSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
-
+  const postsQuery = useQuery({
+    queryKey: ["landing-news"],
+    queryFn: () => getBlogPosts({ perPage: 4 }),
+  });
+  const articles = useMemo(
+    () => (postsQuery.data?.data ?? []).map(toArticle),
+    [postsQuery.data?.data],
+  );
   const featured = articles[0];
   const rest = articles.slice(1);
 
@@ -287,7 +272,6 @@ export function NewsSection() {
       />
 
       <div className="max-w-[1600px] mx-auto px-8 md:px-16">
-        {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-16">
           <div>
             <motion.div
@@ -367,24 +351,42 @@ export function NewsSection() {
           </motion.a>
         </div>
 
-        {/* Bento Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 md:auto-rows-[280px] xl:auto-rows-[300px] gap-4">
-          <div className="min-h-[460px] md:min-h-0 md:col-span-1 md:row-span-2 xl:col-span-2 xl:row-span-2">
-            <ArticleCard article={featured} index={0} variant="feature" />
+        {postsQuery.isLoading ? (
+          <div className="min-h-[420px] grid place-items-center border border-white/10 bg-white/[0.02]">
+            <span className="font-['Barlow_Condensed'] text-xs font-bold tracking-[0.35em] text-white/40">
+              LOADING NEWS
+            </span>
           </div>
-
-          <div className="min-h-[320px] md:min-h-0 md:col-span-1 xl:col-span-2">
-            <ArticleCard article={rest[0]} index={1} variant="wide" />
+        ) : postsQuery.isError || articles.length === 0 ? (
+          <div className="min-h-[420px] grid place-items-center border border-white/10 bg-white/[0.02] px-8 text-center">
+            <span className="font-['Barlow_Condensed'] text-xs font-bold tracking-[0.35em] text-white/40">
+              NO NEWS PUBLISHED YET
+            </span>
           </div>
-
-          <div className="min-h-[300px] md:min-h-0 md:col-span-1 xl:col-span-1">
-            <ArticleCard article={rest[1]} index={2} variant="compact" />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 md:auto-rows-[280px] xl:auto-rows-[300px] gap-4">
+            {featured && (
+              <div className="min-h-[460px] md:min-h-0 md:col-span-1 md:row-span-2 xl:col-span-2 xl:row-span-2">
+                <ArticleCard article={featured} index={0} variant="feature" />
+              </div>
+            )}
+            {rest[0] && (
+              <div className="min-h-[320px] md:min-h-0 md:col-span-1 xl:col-span-2">
+                <ArticleCard article={rest[0]} index={1} variant="wide" />
+              </div>
+            )}
+            {rest[1] && (
+              <div className="min-h-[300px] md:min-h-0 md:col-span-1 xl:col-span-1">
+                <ArticleCard article={rest[1]} index={2} variant="compact" />
+              </div>
+            )}
+            {rest[2] && (
+              <div className="min-h-[300px] md:min-h-0 md:col-span-2 xl:col-span-1">
+                <ArticleCard article={rest[2]} index={3} variant="compact" />
+              </div>
+            )}
           </div>
-
-          <div className="min-h-[300px] md:min-h-0 md:col-span-2 xl:col-span-1">
-            <ArticleCard article={rest[2]} index={3} variant="compact" />
-          </div>
-        </div>
+        )}
       </div>
     </section>
   );

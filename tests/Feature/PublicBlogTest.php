@@ -14,7 +14,7 @@ class PublicBlogTest extends TestCase
     {
         $this->seed(BlogSeeder::class);
 
-        $this->getJson('/api/v1/blog')
+        $this->getJson('/api/v1/news')
             ->assertOk()
             ->assertJsonPath('data.0.slug', 'kuala-lumpur-southeast-asia-concert-capital')
             ->assertJsonPath('data.0.category.slug', 'concert-intelligence')
@@ -27,15 +27,15 @@ class PublicBlogTest extends TestCase
     {
         $this->seed(BlogSeeder::class);
 
-        $this->getJson('/api/v1/blog?category=behind-the-scenes')
+        $this->getJson('/api/v1/news?category=behind-the-scenes')
             ->assertOk()
             ->assertJsonPath('data.0.slug', 'behind-the-build-of-a-festival-stage');
 
-        $this->getJson('/api/v1/blog?tag=ticketing')
+        $this->getJson('/api/v1/news?tag=ticketing')
             ->assertOk()
             ->assertJsonPath('data.0.slug', 'what-fans-should-check-before-buying-concert-tickets');
 
-        $this->getJson('/api/v1/blog?search=durable')
+        $this->getJson('/api/v1/news?search=durable')
             ->assertOk()
             ->assertJsonPath('data.0.slug', 'why-artist-stories-matter-before-show-day');
     }
@@ -44,11 +44,11 @@ class PublicBlogTest extends TestCase
     {
         $this->seed(BlogSeeder::class);
 
-        $this->getJson('/api/v1/blog/kuala-lumpur-southeast-asia-concert-capital')
+        $this->getJson('/api/v1/news/kuala-lumpur-southeast-asia-concert-capital')
             ->assertOk()
             ->assertJsonPath('data.title', 'How Kuala Lumpur Became Southeast Asia Concert Capital')
             ->assertJsonPath('data.author.name', 'Black Sky Editorial')
-            ->assertJsonPath('data.canonical_url', url('/blog/kuala-lumpur-southeast-asia-concert-capital'));
+            ->assertJsonPath('data.canonical_url', url('/news/kuala-lumpur-southeast-asia-concert-capital'));
     }
 
     public function test_blog_pages_have_indexable_meta(): void
@@ -56,14 +56,14 @@ class PublicBlogTest extends TestCase
         $this->withoutVite();
         $this->seed(BlogSeeder::class);
 
-        $this->get('/blog')
+        $this->get('/news')
             ->assertOk()
-            ->assertSee('Blog | Black Sky Enterprise')
+            ->assertSee('News | Black Sky Enterprise')
             ->assertSee('CollectionPage');
 
-        $this->get('/blog/kuala-lumpur-southeast-asia-concert-capital')
+        $this->get('/news/kuala-lumpur-southeast-asia-concert-capital')
             ->assertOk()
-            ->assertSee('How Kuala Lumpur Became Southeast Asia Concert Capital | Black Sky Blog')
+            ->assertSee('How Kuala Lumpur Became Southeast Asia Concert Capital | Black Sky News')
             ->assertSee('Article');
     }
 }

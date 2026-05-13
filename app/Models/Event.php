@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class Event extends Model
@@ -20,6 +22,7 @@ class Event extends Model
         'country_code',
         'genre',
         'start_date',
+        'start_time',
         'end_date',
         'date_display',
         'timezone',
@@ -29,6 +32,9 @@ class Event extends Model
         'accent_color',
         'glow_color',
         'vendor_url',
+        'organizer_name',
+        'organizer_url',
+        'spotify_embed_url',
         'published_at',
         'meta_title',
         'meta_description',
@@ -110,5 +116,34 @@ class Event extends Model
         }
 
         return $this->start_date->format('M d, Y');
+    }
+
+    public function getPublicTimeLabelAttribute(): ?string
+    {
+        if (blank($this->start_time)) {
+            return null;
+        }
+
+        return Carbon::parse($this->start_time)->format('g:i A');
+    }
+
+    public function sections(): HasMany
+    {
+        return $this->hasMany(EventSection::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function enabledSections(): HasMany
+    {
+        return $this->sections()->enabled();
+    }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function syncedTransactions(): HasMany
+    {
+        return $this->hasMany(SyncedTransaction::class);
     }
 }

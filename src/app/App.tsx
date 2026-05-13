@@ -1,5 +1,6 @@
-import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useParams } from "react-router";
+import { lazy, Suspense, useEffect } from "react";
+import { Navigate, Route, Routes, useLocation, useParams } from "react-router";
+import { rememberRegistrationAttribution } from "./auth/registration-attribution";
 import { RequireAuth } from "./routes/RequireAuth";
 import { ScrollToTop } from "./routes/ScrollToTop";
 
@@ -9,11 +10,19 @@ const LandingPage = lazy(() =>
 const DiscoverPage = lazy(() =>
   import("./pages/DiscoverPage").then((module) => ({ default: module.DiscoverPage })),
 );
+const EventDetailPage = lazy(() =>
+  import("./pages/EventDetailPage").then((module) => ({ default: module.EventDetailPage })),
+);
 const BlogPage = lazy(() =>
   import("./pages/BlogPage").then((module) => ({ default: module.BlogPage })),
 );
 const BlogPostPage = lazy(() =>
   import("./pages/BlogPostPage").then((module) => ({ default: module.BlogPostPage })),
+);
+const PortfolioDetailPage = lazy(() =>
+  import("./pages/PortfolioDetailPage").then((module) => ({
+    default: module.PortfolioDetailPage,
+  })),
 );
 const LoginPage = lazy(() =>
   import("./pages/LoginPage").then((module) => ({ default: module.LoginPage })),
@@ -41,6 +50,11 @@ const LoginSuccessPage = lazy(() =>
     default: module.LoginSuccessPage,
   })),
 );
+const UserDashboardPage = lazy(() =>
+  import("./pages/UserDashboardPage").then((module) => ({
+    default: module.UserDashboardPage,
+  })),
+);
 
 function RouteFallback() {
   return (
@@ -61,6 +75,12 @@ function LegacyBlogPostRedirect() {
 }
 
 export default function App() {
+  const location = useLocation();
+
+  useEffect(() => {
+    rememberRegistrationAttribution();
+  }, [location.search]);
+
   return (
     <div
       style={{
@@ -100,6 +120,10 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
+          <Route path="/events" element={<DiscoverPage />} />
+          <Route path="/events/:slug" element={<EventDetailPage />} />
+          <Route path="/portfolio/:slug" element={<PortfolioDetailPage />} />
+          <Route path="/projects/:slug" element={<PortfolioDetailPage />} />
           <Route path="/news" element={<BlogPage />} />
           <Route path="/news/:slug" element={<BlogPostPage />} />
           <Route path="/blog" element={<Navigate to="/news" replace />} />
@@ -124,6 +148,87 @@ export default function App() {
               </RequireAuth>
             }
           />
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard/account"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard/tickets"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard/purchases"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard/saved-events"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard/notifications"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard/support"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard/security"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard/password"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard/remove-account"
+            element={
+              <RequireAuth allowedRoles={["user"]}>
+                <UserDashboardPage />
+              </RequireAuth>
+            }
+          />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

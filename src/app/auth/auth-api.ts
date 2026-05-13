@@ -13,6 +13,7 @@ import type {
   RegisterFormValues,
   ResetPasswordFormValues,
 } from "./auth-schemas";
+import { getRegistrationAttribution } from "./registration-attribution";
 
 const authDriver = import.meta.env.VITE_AUTH_DRIVER ?? "sanctum";
 const usesSanctum = authDriver === "sanctum";
@@ -24,6 +25,10 @@ export type AuthUser = {
   emailVerifiedAt?: string | null;
   phone?: string | null;
   avatar?: string | null;
+  countryCode?: string | null;
+  registrationSource?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
   roles?: string[];
 };
 
@@ -57,6 +62,20 @@ const toAuthUser = (payload: LaravelUserPayload): AuthUser => {
     email: source.email,
     phone: source.phone ?? null,
     avatar: source.avatar ?? null,
+    countryCode:
+      source.countryCode ??
+      (source as AuthUser & { country_code?: string | null }).country_code ??
+      null,
+    registrationSource:
+      source.registrationSource ??
+      (source as AuthUser & { registration_source?: string | null })
+        .registration_source ??
+      null,
+    dateOfBirth:
+      source.dateOfBirth ??
+      (source as AuthUser & { date_of_birth?: string | null }).date_of_birth ??
+      null,
+    gender: source.gender ?? null,
     roles: source.roles ?? [],
     emailVerifiedAt:
       source.emailVerifiedAt ??
@@ -151,10 +170,15 @@ export const authApi = {
     }
 
     try {
+      const attribution = getRegistrationAttribution();
+
       await ensureCsrfCookie();
       await http.post("/api/register", {
         name: values.name,
         email: values.email,
+        country_code: values.countryCode,
+        registration_source: attribution.source,
+        registration_referrer: attribution.referrer,
         password: values.password,
         password_confirmation: values.password,
         terms: values.acceptedTerms,

@@ -60,7 +60,7 @@ export function EmailVerificationPage() {
               {resendMutation.isPending ? "Sending" : "Resend verification"}
             </button>
 
-            <Link className="auth-form__button auth-form__button--ghost" to="/login/success">
+            <Link className="auth-form__button auth-form__button--ghost" to="/dashboard">
               Continue
             </Link>
           </div>

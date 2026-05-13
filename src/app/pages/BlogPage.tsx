@@ -3,6 +3,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ArrowUpRight, CalendarDays, Clock3, Search, Tag, UserRound, X } from "lucide-react";
 import { Link } from "react-router";
+import { FilterDropdown } from "../components/FilterDropdown";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
 import { getBlogPosts, type BlogPostQuery, type BlogPostSummary } from "../blog/blog-api";
@@ -135,6 +136,26 @@ export function BlogPage() {
   const feature = posts[0];
   const gridPosts = feature ? posts.slice(1) : posts;
   const filters = pages[0]?.meta.filters ?? { categories: [], tags: [] };
+  const categoryOptions = useMemo(
+    () => [
+      { value: "", label: "All Categories" },
+      ...filters.categories.map((item) => ({
+        value: item.slug,
+        label: item.name,
+      })),
+    ],
+    [filters.categories],
+  );
+  const tagOptions = useMemo(
+    () => [
+      { value: "", label: "All Tags" },
+      ...filters.tags.map((item) => ({
+        value: item.slug,
+        label: item.name,
+      })),
+    ],
+    [filters.tags],
+  );
   const hasFilters = Boolean(search || category || tag);
   const activeCategoryName = useMemo(
     () => filters.categories.find((item) => item.slug === category)?.name,
@@ -178,31 +199,23 @@ export function BlogPage() {
               />
             </label>
 
-            <label>
-              <Tag aria-hidden="true" />
-              <span className="sr-only">Category</span>
-              <select value={category} onChange={(event) => setCategory(event.target.value)}>
-                <option value="">All Categories</option>
-                {filters.categories.map((item) => (
-                  <option key={item.slug} value={item.slug}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <FilterDropdown
+              ariaLabel="Category"
+              value={category}
+              options={categoryOptions}
+              onChange={setCategory}
+              icon={<Tag aria-hidden="true" />}
+              accent="rose"
+            />
 
-            <label>
-              <Tag aria-hidden="true" />
-              <span className="sr-only">Tag</span>
-              <select value={tag} onChange={(event) => setTag(event.target.value)}>
-                <option value="">All Tags</option>
-                {filters.tags.map((item) => (
-                  <option key={item.slug} value={item.slug}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <FilterDropdown
+              ariaLabel="Tag"
+              value={tag}
+              options={tagOptions}
+              onChange={setTag}
+              icon={<Tag aria-hidden="true" />}
+              accent="rose"
+            />
 
             <button type="button" onClick={clearFilters} disabled={!hasFilters}>
               <X aria-hidden="true" />

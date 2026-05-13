@@ -30,6 +30,7 @@ class PublicEventController extends Controller
                 'country_code',
                 'genre',
                 'start_date',
+                'start_time',
                 'end_date',
                 'date_display',
                 'status',
@@ -55,24 +56,7 @@ class PublicEventController extends Controller
             ->cursorPaginate($perPage);
 
         return response()->json([
-            'data' => $events->getCollection()->map(fn (Event $event): array => [
-                'id' => $event->id,
-                'title' => $event->title,
-                'slug' => $event->slug,
-                'subtitle' => $event->subtitle,
-                'venue' => $event->venue,
-                'city' => $event->city,
-                'country_code' => $event->country_code,
-                'genre' => $event->genre,
-                'date' => $event->admin_date_label,
-                'start_date' => $event->start_date->toDateString(),
-                'end_date' => $event->end_date?->toDateString(),
-                'status' => $event->is_sold_out ? 'sold_out' : $event->status,
-                'image_url' => $event->image_url,
-                'accent_color' => $event->accent_color,
-                'glow_color' => $event->glow_color,
-                'vendor_url' => $event->vendor_url,
-            ])->values(),
+            'data' => $events->getCollection()->map(fn (Event $event): array => $this->eventSummary($event))->values(),
             'meta' => [
                 'per_page' => $perPage,
                 'next_cursor' => $events->nextCursor()?->encode(),
@@ -94,11 +78,68 @@ class PublicEventController extends Controller
         ]);
     }
 
+    public function show(string $slug): JsonResponse
+    {
+        $event = $this->publishedEventsQuery()
+            ->with([
+                'enabledSections:id,event_id,section_key,title,content,sort_order',
+            ])
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        return response()->json([
+            'data' => [
+                ...$this->eventSummary($event),
+                'timezone' => $event->timezone,
+                'organizer_name' => $event->organizer_name ?: 'Black Sky Enterprise',
+                'organizer_url' => $event->organizer_url,
+                'spotify_embed_url' => $event->spotify_embed_url,
+                'sections' => $event->enabledSections
+                    ->map(fn ($section): array => [
+                        'id' => $section->id,
+                        'section_key' => $section->section_key,
+                        'title' => $section->title,
+                        'content' => $section->content,
+                    ])
+                    ->values(),
+                'meta_title' => $event->meta_title ?: $event->title . ' | Black Sky Enterprise',
+                'meta_description' => $event->meta_description,
+                'meta_keywords' => $event->meta_keywords,
+                'canonical_url' => $event->canonical_url ?: url('/events/' . $event->slug),
+                'og_image' => $event->og_image ?: $event->image_url,
+            ],
+        ]);
+    }
+
     private function publishedEventsQuery(): Builder
     {
         return Event::query()
             ->where('status', 'published')
             ->whereNotNull('published_at')
             ->where('published_at', '<=', now());
+    }
+
+    private function eventSummary(Event $event): array
+    {
+        return [
+            'id' => $event->id,
+            'title' => $event->title,
+            'slug' => $event->slug,
+            'subtitle' => $event->subtitle,
+            'venue' => $event->venue,
+            'city' => $event->city,
+            'country_code' => $event->country_code,
+            'genre' => $event->genre,
+            'date' => $event->admin_date_label,
+            'start_date' => $event->start_date->toDateString(),
+            'start_time' => $event->start_time,
+            'time' => $event->public_time_label,
+            'end_date' => $event->end_date?->toDateString(),
+            'status' => $event->is_sold_out ? 'sold_out' : $event->status,
+            'image_url' => $event->image_url,
+            'accent_color' => $event->accent_color,
+            'glow_color' => $event->glow_color,
+            'vendor_url' => $event->vendor_url,
+        ];
     }
 }

@@ -53,6 +53,7 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
                 ListEvents::class,
             ])
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

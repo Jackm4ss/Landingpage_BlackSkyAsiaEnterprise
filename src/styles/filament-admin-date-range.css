@@ -34,14 +34,23 @@
   margin-left: auto;
 }
 
+.bsa-date-range-trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .bsa-date-range-content {
   z-index: 90;
   width: auto;
+  max-height: min(var(--radix-popper-available-height, calc(100dvh - 32px)), calc(100dvh - 32px));
   border: 2px solid #020617;
   border-radius: 2px;
   background: #0b1626;
   box-shadow: 8px 8px 0 #020617;
   color: #f8fafc;
+  overflow-y: auto;
   padding: 0;
 }
 
@@ -179,14 +188,18 @@
 
 .bsa-date-range-day-selected,
 .bsa-date-range-day-start,
-.bsa-date-range-day-end {
+.bsa-date-range-day-end,
+.bsa-date-range-day-middle {
   background: #0ea5e9;
   color: #fff;
   box-shadow: 3px 3px 0 #020617;
 }
 
-.bsa-date-range-day-middle {
-  background: rgba(14, 165, 233, 0.24);
+.bsa-date-range-day-selected:hover,
+.bsa-date-range-day-start:hover,
+.bsa-date-range-day-end:hover,
+.bsa-date-range-day-middle:hover {
+  background: #0ea5e9;
   color: #fff;
 }
 
@@ -240,11 +253,13 @@
 @media (max-width: 760px) {
   .bsa-date-range-content {
     max-width: calc(100vw - 32px);
-    overflow-x: auto;
+    width: min(320px, calc(100vw - 32px));
+    overflow-x: hidden;
   }
 
   .bsa-date-range-months {
     flex-direction: column;
+    gap: 0;
   }
 
   .bsa-date-range-month + .bsa-date-range-month {
@@ -261,5 +276,23 @@
     left: 2px;
     width: auto;
     height: 2px;
+  }
+
+  .bsa-date-range-calendar {
+    padding: 12px;
+  }
+
+  .bsa-date-range-head-cell,
+  .bsa-date-range-cell {
+    width: 35px;
+  }
+
+  .bsa-date-range-cell {
+    height: 34px;
+  }
+
+  .bsa-date-range-day {
+    width: 30px;
+    height: 30px;
   }
 }

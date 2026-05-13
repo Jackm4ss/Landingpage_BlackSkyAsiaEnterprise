@@ -145,7 +145,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.discover-hero-panel div {
+.discover-hero-panel__meta-line {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -170,6 +170,16 @@
   font-weight: 900;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+.discover-hero-panel__footer,
+.discover-hero-panel__actions {
+  display: grid;
+  gap: 10px;
+}
+
+.discover-hero-panel__actions a {
+  width: 100%;
 }
 
 .discover-hero-controls {
@@ -520,6 +530,7 @@
   color: #a855f7;
 }
 
+.discover-hero-panel__actions a,
 .discover-event-side a,
 .discover-load-more button {
   min-height: 42px;
@@ -539,14 +550,26 @@
   text-transform: uppercase;
 }
 
+.discover-hero-panel__actions a:hover,
 .discover-event-side a:hover,
 .discover-load-more button:hover {
   background: #0ea5e9;
 }
 
+.discover-hero-panel__actions a svg,
 .discover-event-side a svg {
   width: 16px;
   height: 16px;
+}
+
+.discover-hero-panel__actions .save-event-button,
+.discover-event-side .save-event-button {
+  min-height: 42px;
+  min-width: 160px;
+}
+
+.discover-event-side a {
+  min-width: 160px;
 }
 
 .discover-empty {
@@ -704,6 +727,10 @@
   }
 
   .discover-event-side a {
+    width: 100%;
+  }
+
+  .discover-event-side .save-event-button {
     width: 100%;
   }
 }

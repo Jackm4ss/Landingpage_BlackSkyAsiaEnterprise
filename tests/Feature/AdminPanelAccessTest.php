@@ -53,6 +53,63 @@ class AdminPanelAccessTest extends TestCase
             ->assertDontSee('Indonesia');
     }
 
+    public function test_admin_dashboard_shows_registration_attribution_data(): void
+    {
+        Role::findOrCreate('admin');
+
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->assignRole('admin');
+
+        User::factory()->create([
+            'registration_source' => 'tiktok',
+            'registration_country_code' => 'MY',
+        ]);
+        User::factory()->create([
+            'registration_source' => 'facebook',
+            'registration_country_code' => 'ID',
+        ]);
+        User::factory()->create([
+            'registration_source' => 'tiktok',
+            'registration_country_code' => 'MY',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin')
+            ->assertOk()
+            ->assertSee('Total Registered')
+            ->assertSee('3')
+            ->assertSee('TikTok')
+            ->assertSee('Facebook')
+            ->assertSee('Malaysia')
+            ->assertSee('Indonesia')
+            ->assertDontSee('No registration sources yet')
+            ->assertDontSee('No country data yet');
+    }
+
+    public function test_user_management_list_excludes_admin_accounts(): void
+    {
+        Role::findOrCreate('admin');
+        Role::findOrCreate('user');
+
+        $admin = User::factory()->create([
+            'email' => 'cms-admin@blacksky.test',
+            'is_active' => true,
+        ]);
+        $admin->assignRole('admin');
+
+        $member = User::factory()->create([
+            'email' => 'member-list@blacksky.test',
+            'is_active' => true,
+        ]);
+        $member->assignRole('user');
+
+        $this->actingAs($admin)
+            ->get('/admin/users')
+            ->assertOk()
+            ->assertSee('member-list@blacksky.test')
+            ->assertDontSee('cms-admin@blacksky.test');
+    }
+
     public function test_admin_can_access_events_list_view(): void
     {
         Role::findOrCreate('admin');

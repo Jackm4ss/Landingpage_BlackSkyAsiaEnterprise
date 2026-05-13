@@ -1,7 +1,7 @@
 import { type CSSProperties, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "../components/ui/checkbox";
 import { Input } from "../components/ui/input";
@@ -47,6 +47,7 @@ const pageCopy = {
 
 export function LoginPage({ variant = "user" }: LoginPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const loginMutation = useLoginMutation();
   const logoutMutation = useLogoutMutation();
   const [showPassword, setShowPassword] = useState(false);
@@ -54,6 +55,14 @@ export function LoginPage({ variant = "user" }: LoginPageProps) {
   const isAdminLogin = variant === "admin";
   const copy = pageCopy[variant];
   const isSubmitting = loginMutation.isPending || logoutMutation.isPending;
+  const requestedRedirect = (location.state as { from?: unknown } | null)?.from;
+  const memberRedirect =
+    typeof requestedRedirect === "string" &&
+    requestedRedirect.startsWith("/") &&
+    !requestedRedirect.startsWith("//") &&
+    !requestedRedirect.startsWith("/admin")
+      ? requestedRedirect
+      : "/dashboard";
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -75,7 +84,7 @@ export function LoginPage({ variant = "user" }: LoginPageProps) {
         return;
       }
 
-      navigate(isAdminLogin ? "/admin" : "/login/success");
+      navigate(isAdminLogin ? "/admin" : memberRedirect);
     } catch (error) {
       setSubmitError(getAuthErrorMessage(error, "Login gagal."));
     }

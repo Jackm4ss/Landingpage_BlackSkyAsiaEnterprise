@@ -889,9 +889,9 @@
 
     .bsa-source-row {
         display: grid;
-        grid-template-columns: 14px 1fr auto;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
         align-items: center;
-        gap: 14px;
+        gap: 16px;
         min-height: 70px;
         border-bottom: 2px solid var(--neo-ink);
     }
@@ -900,13 +900,50 @@
         border-bottom: 0;
     }
 
-    .bsa-source-row i {
-        width: 10px;
-        height: 10px;
+    .bsa-source-icon {
+        width: 42px;
+        height: 42px;
+        display: grid !important;
+        place-items: center;
         border: 2px solid var(--neo-ink);
-        border-radius: 50%;
+        border-radius: 2px;
         background: var(--source-color);
         box-shadow: 3px 3px 0 var(--neo-ink);
+        color: #fff;
+        flex: 0 0 auto;
+        margin: 0 !important;
+        line-height: 1 !important;
+    }
+
+    .bsa-source-icon svg {
+        width: 22px;
+        height: 22px;
+        display: block;
+        color: currentColor;
+    }
+
+    .bsa-source-icon[data-icon-style="stroke"] svg {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .bsa-source-icon[data-icon-style="fill"] svg {
+        fill: currentColor;
+        stroke: none;
+    }
+
+    .bsa-source-icon--compact {
+        width: 28px;
+        height: 28px;
+        box-shadow: 3px 3px 0 var(--neo-ink);
+    }
+
+    .bsa-source-icon--compact svg {
+        width: 15px;
+        height: 15px;
     }
 
     .bsa-source-row strong,
@@ -920,8 +957,8 @@
         text-transform: uppercase;
     }
 
-    .bsa-source-row span,
-    .bsa-country-row span {
+    .bsa-source-row div > span,
+    .bsa-country-row div > span {
         display: block;
         margin-top: 4px;
         color: #334155;
@@ -935,6 +972,36 @@
         font-size: 16px;
         font-weight: 900;
         letter-spacing: 0.04em;
+    }
+
+    .bsa-table-source {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 34px;
+        color: var(--neo-dark-text);
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        line-height: 1;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .bsa-table-source > span:last-child {
+        color: inherit;
+    }
+
+    .bsa-table-source--empty {
+        color: var(--neo-dark-muted);
+        gap: 8px;
+    }
+
+    .bsa-table-source--empty svg {
+        width: 18px;
+        height: 18px;
+        color: currentColor;
     }
 
     .bsa-country-list {
@@ -1060,14 +1127,23 @@
     }
 
     body.fi-panel-admin .bsa-panel-head span,
-    body.fi-panel-admin .bsa-source-row span,
-    body.fi-panel-admin .bsa-country-row span {
+    body.fi-panel-admin .bsa-source-row div > span,
+    body.fi-panel-admin .bsa-country-row div > span {
         color: var(--neo-dark-muted);
     }
 
     body.fi-panel-admin .bsa-source-row,
     body.fi-panel-admin .bsa-country-row {
         border-bottom-color: rgba(248, 250, 252, 0.18);
+    }
+
+    body.fi-panel-admin .bsa-source-icon {
+        border-color: #020617;
+        box-shadow: 3px 3px 0 #020617;
+    }
+
+    body.fi-panel-admin .bsa-source-icon--compact {
+        box-shadow: 3px 3px 0 #020617;
     }
 
     body.fi-panel-admin .bsa-donut::before {
@@ -1112,6 +1188,32 @@
 
     body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item a:not(:hover):not([aria-current='page']) {
         color: var(--neo-dark-text) !important;
+    }
+
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item a:hover {
+        border-color: var(--neo-blue) !important;
+        background: rgba(14, 165, 233, 0.18) !important;
+        box-shadow: 4px 4px 0 #020617 !important;
+        color: var(--neo-dark-text) !important;
+    }
+
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item a:hover svg,
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item a:hover .fi-sidebar-item-label,
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item a:hover .fi-sidebar-item-icon {
+        color: var(--neo-dark-text) !important;
+    }
+
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item.fi-active a:hover,
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item-active a:hover {
+        background: var(--neo-blue) !important;
+        color: #fff !important;
+    }
+
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item.fi-active a:hover svg,
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item-active a:hover svg,
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item.fi-active a:hover .fi-sidebar-item-label,
+    body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-sidebar-item-active a:hover .fi-sidebar-item-label {
+        color: #fff !important;
     }
 
     body.fi-panel-admin:not(:has(.fi-simple-layout)) .fi-topbar,
@@ -1472,6 +1574,18 @@
         font-size: 12px;
         font-style: normal;
         font-weight: 700;
+    }
+
+    .bsa-events-field small {
+        display: block;
+        max-width: 720px;
+        color: var(--neo-dark-muted);
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0;
+        line-height: 1.45;
+        text-transform: none;
     }
 
     .bsa-events-clear {
@@ -1855,6 +1969,72 @@
         padding: 0 16px;
     }
 
+    .bsa-events-section-builder {
+        display: grid;
+        gap: 14px;
+        padding: 0 16px;
+    }
+
+    .bsa-events-section-add {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 12px;
+        border: 2px dashed rgba(203, 213, 225, 0.2);
+        background: rgba(14, 165, 233, 0.06);
+        padding: 14px;
+    }
+
+    .bsa-events-section-list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .bsa-events-section-block,
+    .bsa-events-section-empty {
+        border: 2px solid rgba(203, 213, 225, 0.18);
+        background: rgba(11, 22, 38, 0.72);
+        padding: 14px;
+    }
+
+    .bsa-events-section-block {
+        display: grid;
+        gap: 12px;
+    }
+
+    .bsa-events-section-block-head {
+        display: grid;
+        grid-template-columns: minmax(150px, 0.9fr) minmax(180px, 1.2fr) auto auto;
+        align-items: end;
+        gap: 12px;
+    }
+
+    .bsa-events-section-toggle {
+        min-height: 38px;
+        align-items: center;
+        padding-bottom: 2px;
+    }
+
+    .bsa-events-section-empty {
+        display: grid;
+        gap: 6px;
+        color: var(--neo-dark-muted);
+        font-family: 'Barlow', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .bsa-events-section-empty strong {
+        color: #fff;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 17px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+
     .bsa-events-upload {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 180px;
@@ -2045,6 +2225,457 @@
         box-shadow: none;
     }
 
+    .fi-resource-list-records-page,
+    .fi-resource-create-record-page,
+    .fi-resource-edit-record-page {
+        width: min(100%, 1122px);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        margin-inline: auto;
+        color: var(--neo-dark-text);
+    }
+
+    .fi-resource-list-records-page .fi-header,
+    .fi-resource-create-record-page .fi-header,
+    .fi-resource-edit-record-page .fi-header {
+        position: relative;
+        min-height: 164px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 24px;
+        overflow: hidden;
+        border: var(--neo-border);
+        border-radius: 2px;
+        background:
+            linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(168, 85, 247, 0.16)),
+            var(--neo-dark-surface-2);
+        box-shadow: 10px 10px 0 var(--neo-purple);
+        padding: 28px 30px;
+    }
+
+    .fi-resource-list-records-page .fi-header::before,
+    .fi-resource-create-record-page .fi-header::before,
+    .fi-resource-edit-record-page .fi-header::before,
+    .fi-resource-list-records-page .fi-header::after,
+    .fi-resource-create-record-page .fi-header::after,
+    .fi-resource-edit-record-page .fi-header::after {
+        content: "";
+        position: absolute;
+        border: var(--neo-border);
+        border-radius: 2px;
+        pointer-events: none;
+    }
+
+    .fi-resource-list-records-page .fi-header::before,
+    .fi-resource-create-record-page .fi-header::before,
+    .fi-resource-edit-record-page .fi-header::before {
+        right: 150px;
+        top: 28px;
+        width: 84px;
+        height: 38px;
+        background: var(--neo-dark-elevated);
+        box-shadow: 5px 5px 0 var(--neo-purple);
+        transform: rotate(5deg);
+    }
+
+    .fi-resource-list-records-page .fi-header::after,
+    .fi-resource-create-record-page .fi-header::after,
+    .fi-resource-edit-record-page .fi-header::after {
+        right: 30px;
+        bottom: 22px;
+        width: 92px;
+        height: 30px;
+        background: var(--neo-blue);
+        box-shadow: 5px 5px 0 var(--neo-ink);
+        transform: rotate(-4deg);
+    }
+
+    .fi-resource-list-records-page .fi-header > *,
+    .fi-resource-create-record-page .fi-header > *,
+    .fi-resource-edit-record-page .fi-header > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .fi-resource-list-records-page .fi-breadcrumbs,
+    .fi-resource-create-record-page .fi-breadcrumbs,
+    .fi-resource-edit-record-page .fi-breadcrumbs {
+        display: block !important;
+        margin: 0 0 8px !important;
+    }
+
+    .fi-resource-list-records-page .fi-breadcrumbs a,
+    .fi-resource-create-record-page .fi-breadcrumbs a,
+    .fi-resource-edit-record-page .fi-breadcrumbs a,
+    .fi-resource-list-records-page .fi-breadcrumbs li,
+    .fi-resource-create-record-page .fi-breadcrumbs li,
+    .fi-resource-edit-record-page .fi-breadcrumbs li,
+    .fi-resource-list-records-page .fi-breadcrumbs span,
+    .fi-resource-create-record-page .fi-breadcrumbs span,
+    .fi-resource-edit-record-page .fi-breadcrumbs span {
+        color: var(--neo-dark-muted) !important;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .fi-resource-list-records-page .fi-header-heading,
+    .fi-resource-create-record-page .fi-header-heading,
+    .fi-resource-edit-record-page .fi-header-heading {
+        margin: 0;
+        color: #fff !important;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: clamp(30px, 4vw, 48px) !important;
+        font-style: italic;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+        line-height: 0.9 !important;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 0 var(--neo-blue);
+    }
+
+    .fi-resource-list-records-page .fi-ta,
+    .fi-resource-list-records-page .fi-ta-ctn,
+    .fi-resource-create-record-page .fi-section,
+    .fi-resource-edit-record-page .fi-section {
+        overflow: hidden;
+        border: var(--neo-border) !important;
+        border-radius: 2px !important;
+        background: var(--neo-dark-surface) !important;
+        box-shadow: 10px 10px 0 var(--neo-purple) !important;
+        color: var(--neo-dark-text) !important;
+        ring: 0 !important;
+    }
+
+    .fi-resource-list-records-page .fi-ta-header-toolbar,
+    .fi-resource-list-records-page .fi-ta-filters,
+    .fi-resource-list-records-page .fi-pagination,
+    .fi-resource-create-record-page .fi-section-header,
+    .fi-resource-edit-record-page .fi-section-header {
+        border-bottom: var(--neo-border);
+        background: var(--neo-dark-surface-2);
+    }
+
+    .fi-resource-list-records-page .fi-ta-header-toolbar,
+    .fi-resource-list-records-page .fi-ta-filters,
+    .fi-resource-create-record-page .fi-section-header,
+    .fi-resource-edit-record-page .fi-section-header {
+        padding: 20px 24px !important;
+    }
+
+    .fi-resource-list-records-page .fi-ta-content {
+        overflow-x: auto;
+        background: var(--neo-dark-surface);
+    }
+
+    .fi-resource-list-records-page .fi-ta-table {
+        min-width: 940px;
+        border-collapse: collapse;
+        color: var(--neo-dark-text) !important;
+    }
+
+    .fi-resource-list-records-page .fi-ta-header-cell,
+    .fi-resource-list-records-page .fi-ta-cell {
+        border-bottom: 1px solid rgba(203, 213, 225, 0.16) !important;
+        background: transparent !important;
+        padding: 10px 18px !important;
+    }
+
+    .fi-resource-list-records-page .fi-ta-header-cell-label,
+    .fi-resource-list-records-page .fi-ta-header-cell button,
+    .fi-resource-list-records-page .fi-ta-text,
+    .fi-resource-list-records-page .fi-ta-text-item,
+    .fi-resource-list-records-page .fi-ta-actions a,
+    .fi-resource-list-records-page .fi-ta-actions button,
+    .fi-resource-list-records-page .fi-pagination,
+    .fi-resource-list-records-page .fi-pagination label {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .fi-resource-list-records-page .fi-ta-header-cell-label,
+    .fi-resource-list-records-page .fi-ta-header-cell button {
+        color: var(--neo-dark-muted) !important;
+        font-size: 12px !important;
+    }
+
+    .fi-resource-list-records-page .fi-ta-row:hover {
+        background: rgba(14, 165, 233, 0.12) !important;
+    }
+
+    .fi-resource-list-records-page .fi-ta-text,
+    .fi-resource-list-records-page .fi-ta-text-item,
+    .fi-resource-list-records-page .fi-ta-text-item-label,
+    .fi-resource-list-records-page .fi-ta-cell a {
+        color: var(--neo-dark-text) !important;
+    }
+
+    .fi-resource-list-records-page .fi-ta-image {
+        border: 2px solid var(--neo-ink);
+        border-radius: 2px;
+        box-shadow: 3px 3px 0 var(--neo-ink);
+        object-fit: cover;
+    }
+
+    .fi-resource-list-records-page .fi-badge {
+        border: 2px solid var(--neo-ink);
+        border-radius: 2px;
+        background: var(--neo-blue) !important;
+        box-shadow: 3px 3px 0 var(--neo-ink);
+        color: #fff !important;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .fi-resource-list-records-page .fi-ta-actions a,
+    .fi-resource-list-records-page .fi-ta-actions button {
+        min-height: 32px;
+        border: 2px solid var(--neo-ink);
+        border-radius: 2px;
+        background: var(--neo-dark-elevated);
+        box-shadow: 3px 3px 0 var(--neo-ink);
+        color: #fff !important;
+        font-size: 12px;
+    }
+
+    .fi-resource-list-records-page .fi-ta-actions a:hover,
+    .fi-resource-list-records-page .fi-ta-actions button:hover {
+        background: var(--neo-yellow);
+        color: var(--neo-ink) !important;
+    }
+
+    .fi-resource-list-records-page .fi-pagination {
+        padding: 14px 18px !important;
+        color: var(--neo-dark-muted) !important;
+    }
+
+    .fi-resource-create-record-page .fi-section-header-heading,
+    .fi-resource-edit-record-page .fi-section-header-heading {
+        color: #fff !important;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 22px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.08em;
+        line-height: 1;
+        text-transform: uppercase;
+    }
+
+    .fi-resource-create-record-page .fi-section-header-description,
+    .fi-resource-edit-record-page .fi-section-header-description,
+    .fi-resource-create-record-page .fi-fo-field-wrp-helper-text,
+    .fi-resource-edit-record-page .fi-fo-field-wrp-helper-text {
+        color: var(--neo-dark-muted) !important;
+        font-family: 'Barlow', sans-serif;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .fi-resource-create-record-page .fi-section-content,
+    .fi-resource-edit-record-page .fi-section-content {
+        background: var(--neo-dark-surface);
+        padding: 22px 24px !important;
+    }
+
+    .fi-resource-create-record-page .fi-fo-field-wrp-label span,
+    .fi-resource-edit-record-page .fi-fo-field-wrp-label span,
+    .fi-resource-create-record-page .fi-fo-field-wrp-label sup,
+    .fi-resource-edit-record-page .fi-fo-field-wrp-label sup {
+        color: var(--neo-dark-muted) !important;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+    }
+
+    .fi-resource-create-record-page .fi-fo-field-wrp-label sup,
+    .fi-resource-edit-record-page .fi-fo-field-wrp-label sup {
+        color: #fb174f !important;
+        font-family: 'Inter', sans-serif;
+        letter-spacing: 0;
+    }
+
+    .fi-resource-create-record-page .fi-input-wrp,
+    .fi-resource-edit-record-page .fi-input-wrp,
+    .fi-resource-create-record-page .fi-select-input,
+    .fi-resource-edit-record-page .fi-select-input,
+    .fi-resource-create-record-page .choices__inner,
+    .fi-resource-edit-record-page .choices__inner,
+    .fi-resource-create-record-page .fi-fo-rich-editor,
+    .fi-resource-edit-record-page .fi-fo-rich-editor,
+    .fi-resource-create-record-page .fi-rich-editor,
+    .fi-resource-edit-record-page .fi-rich-editor {
+        border: 2px solid var(--neo-ink) !important;
+        border-radius: 2px !important;
+        background: var(--neo-dark-elevated) !important;
+        color: var(--neo-dark-text) !important;
+        box-shadow: 4px 4px 0 var(--neo-ink) !important;
+        ring: 0 !important;
+    }
+
+    .fi-resource-create-record-page .fi-input,
+    .fi-resource-edit-record-page .fi-input,
+    .fi-resource-create-record-page .fi-select-input,
+    .fi-resource-edit-record-page .fi-select-input,
+    .fi-resource-create-record-page textarea,
+    .fi-resource-edit-record-page textarea {
+        color: var(--neo-dark-text) !important;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px !important;
+        font-weight: 600;
+    }
+
+    .fi-resource-create-record-page .fi-input::placeholder,
+    .fi-resource-edit-record-page .fi-input::placeholder,
+    .fi-resource-create-record-page textarea::placeholder,
+    .fi-resource-edit-record-page textarea::placeholder {
+        color: rgba(203, 213, 225, 0.48) !important;
+    }
+
+    .fi-resource-create-record-page .fi-fo-file-upload .filepond--root,
+    .fi-resource-edit-record-page .fi-fo-file-upload .filepond--root {
+        margin-bottom: 0 !important;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .fi-resource-create-record-page .fi-fo-file-upload .filepond--panel-root,
+    .fi-resource-edit-record-page .fi-fo-file-upload .filepond--panel-root {
+        border: 2px solid var(--neo-ink) !important;
+        border-radius: 2px !important;
+        background: var(--neo-dark-elevated) !important;
+        box-shadow: 4px 4px 0 var(--neo-ink) !important;
+    }
+
+    .fi-resource-create-record-page .fi-fo-file-upload .filepond--drop-label,
+    .fi-resource-edit-record-page .fi-fo-file-upload .filepond--drop-label {
+        min-height: 112px !important;
+        color: var(--neo-dark-text) !important;
+        font-family: 'Barlow Condensed', sans-serif !important;
+        font-size: 15px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .fi-resource-create-record-page .fi-fo-file-upload .filepond--label-action,
+    .fi-resource-edit-record-page .fi-fo-file-upload .filepond--label-action {
+        color: var(--neo-blue) !important;
+        text-decoration: none !important;
+    }
+
+    .fi-resource-create-record-page .fi-fo-file-upload .filepond--item-panel,
+    .fi-resource-edit-record-page .fi-fo-file-upload .filepond--item-panel {
+        border-radius: 2px !important;
+        background: var(--neo-blue) !important;
+    }
+
+    .fi-resource-create-record-page .fi-placeholder,
+    .fi-resource-edit-record-page .fi-placeholder {
+        color: var(--neo-dark-text) !important;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .fi-resource-create-record-page .bsa-current-media-link,
+    .fi-resource-edit-record-page .bsa-current-media-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        border: 2px solid var(--neo-ink);
+        border-radius: 2px;
+        background: var(--neo-yellow);
+        box-shadow: 4px 4px 0 var(--neo-ink);
+        color: var(--neo-ink) !important;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        padding: 8px 12px;
+        text-decoration: none;
+        text-transform: uppercase;
+    }
+
+    .fi-resource-create-record-page .fi-input-wrp:focus-within,
+    .fi-resource-edit-record-page .fi-input-wrp:focus-within,
+    .fi-resource-create-record-page .fi-fo-rich-editor:focus-within,
+    .fi-resource-edit-record-page .fi-fo-rich-editor:focus-within,
+    .fi-resource-create-record-page .fi-fo-file-upload:focus-within,
+    .fi-resource-edit-record-page .fi-fo-file-upload:focus-within {
+        outline: 2px solid var(--neo-blue);
+        outline-offset: 2px;
+    }
+
+    .fi-resource-create-record-page .fi-checkbox-input,
+    .fi-resource-edit-record-page .fi-checkbox-input,
+    .fi-resource-create-record-page .fi-toggle input,
+    .fi-resource-edit-record-page .fi-toggle input {
+        border: 2px solid var(--neo-ink) !important;
+        border-radius: 2px !important;
+        box-shadow: 3px 3px 0 var(--neo-ink) !important;
+    }
+
+    .fi-resource-list-records-page .fi-btn,
+    .fi-resource-create-record-page .fi-btn,
+    .fi-resource-edit-record-page .fi-btn,
+    .fi-resource-list-records-page .fi-icon-btn,
+    .fi-resource-create-record-page .fi-icon-btn,
+    .fi-resource-edit-record-page .fi-icon-btn {
+        border: 2px solid var(--neo-ink) !important;
+        border-radius: 2px !important;
+        background: var(--neo-blue) !important;
+        box-shadow: 4px 4px 0 var(--neo-ink) !important;
+        color: #fff !important;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .fi-resource-list-records-page .fi-btn:hover,
+    .fi-resource-create-record-page .fi-btn:hover,
+    .fi-resource-edit-record-page .fi-btn:hover,
+    .fi-resource-list-records-page .fi-icon-btn:hover,
+    .fi-resource-create-record-page .fi-icon-btn:hover,
+    .fi-resource-edit-record-page .fi-icon-btn:hover {
+        background: var(--neo-yellow) !important;
+        color: var(--neo-ink) !important;
+        transform: translate(1px, 1px);
+        box-shadow: 3px 3px 0 var(--neo-ink) !important;
+    }
+
+    .fi-resource-list-records-page .fi-btn.fi-color-danger,
+    .fi-resource-create-record-page .fi-btn.fi-color-danger,
+    .fi-resource-edit-record-page .fi-btn.fi-color-danger,
+    .fi-resource-list-records-page .fi-icon-btn.fi-color-danger,
+    .fi-resource-create-record-page .fi-icon-btn.fi-color-danger,
+    .fi-resource-edit-record-page .fi-icon-btn.fi-color-danger {
+        background: var(--neo-rose) !important;
+    }
+
+    .fi-resource-list-records-page .fi-dropdown-panel,
+    .fi-resource-create-record-page .fi-dropdown-panel,
+    .fi-resource-edit-record-page .fi-dropdown-panel,
+    .fi-resource-list-records-page .fi-modal-window,
+    .fi-resource-create-record-page .fi-modal-window,
+    .fi-resource-edit-record-page .fi-modal-window {
+        border: var(--neo-border) !important;
+        border-radius: 2px !important;
+        background: var(--neo-dark-surface) !important;
+        box-shadow: 10px 10px 0 var(--neo-purple) !important;
+        color: var(--neo-dark-text) !important;
+    }
+
     @media (max-width: 1180px) {
         .bsa-stats-grid,
         .bsa-dashboard-grid {
@@ -2167,6 +2798,32 @@
             min-height: 64px;
         }
 
+        .bsa-source-row {
+            grid-template-columns: 42px 1fr auto;
+            gap: 12px;
+        }
+
+        .bsa-source-icon {
+            width: 36px;
+            height: 36px;
+            box-shadow: 3px 3px 0 var(--neo-ink);
+        }
+
+        .bsa-source-icon svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .bsa-source-icon--compact {
+            width: 28px;
+            height: 28px;
+        }
+
+        .bsa-source-icon--compact svg {
+            width: 15px;
+            height: 15px;
+        }
+
         .bsa-events {
             gap: 16px;
         }
@@ -2248,6 +2905,16 @@
 
         .bsa-events-form-grid {
             grid-template-columns: 1fr;
+        }
+
+        .bsa-events-section-add,
+        .bsa-events-section-block-head {
+            grid-template-columns: 1fr;
+        }
+
+        .bsa-events-section-add .bsa-events-modal-secondary,
+        .bsa-events-section-block-head .bsa-events-modal-close {
+            width: 100%;
         }
 
         .bsa-events-upload {

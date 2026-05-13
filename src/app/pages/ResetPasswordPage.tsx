@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type UseFormRegisterReturn } from "react-hook-form";
-import { Link, useSearchParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -65,6 +65,7 @@ const PasswordField = ({
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
+  const { token: routeToken } = useParams();
   const resetPasswordMutation = useResetPasswordMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
@@ -73,6 +74,7 @@ export function ResetPasswordPage() {
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
+      email: searchParams.get("email") ?? "",
       password: "",
       passwordConfirmation: "",
     },
@@ -85,8 +87,8 @@ export function ResetPasswordPage() {
     try {
       const response = await resetPasswordMutation.mutateAsync({
         ...values,
-        email: searchParams.get("email"),
-        token: searchParams.get("token"),
+        email: values.email,
+        token: routeToken ?? searchParams.get("token"),
       });
 
       setMessage(response.message);
@@ -110,6 +112,26 @@ export function ResetPasswordPage() {
           </div>
 
           <form className="auth-form login-page__form" onSubmit={onSubmit} noValidate>
+            <div className="auth-form__field">
+              <Label className="auth-form__label" htmlFor="reset-email">
+                Email address*
+              </Label>
+              <Input
+                className="auth-form__input"
+                id="reset-email"
+                type="email"
+                autoComplete="email"
+                placeholder="Enter your email address"
+                aria-invalid={Boolean(form.formState.errors.email)}
+                {...form.register("email")}
+              />
+              {form.formState.errors.email ? (
+                <p className="auth-form__field-error">
+                  {form.formState.errors.email.message}
+                </p>
+              ) : null}
+            </div>
+
             <PasswordField
               id="reset-password"
               label="New Password*"

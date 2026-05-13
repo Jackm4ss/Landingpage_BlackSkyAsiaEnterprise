@@ -23,6 +23,9 @@ class AuthApiTest extends TestCase
         $this->postJson('/api/register', [
             'name' => 'Black Sky Member',
             'email' => 'member@blacksky.test',
+            'country_code' => 'MY',
+            'registration_source' => 'tiktok',
+            'registration_referrer' => 'https://www.tiktok.com/@blacksky',
             'password' => 'Password123!',
             'password_confirmation' => 'Password123!',
             'terms' => true,
@@ -31,6 +34,9 @@ class AuthApiTest extends TestCase
         $user = User::query()->where('email', 'member@blacksky.test')->firstOrFail();
 
         $this->assertTrue($user->hasRole('user'));
+        $this->assertSame('MY', $user->registration_country_code);
+        $this->assertSame('tiktok', $user->registration_source);
+        $this->assertSame('https://www.tiktok.com/@blacksky', $user->registration_referrer);
     }
 
     public function test_user_can_login_and_fetch_current_user(): void

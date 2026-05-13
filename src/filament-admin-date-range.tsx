@@ -67,6 +67,22 @@ function syncInput(inputId: string, value: string): void {
   input.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = React.useState(false);
+
+  React.useEffect(() => {
+    const media = window.matchMedia(query);
+    const updateMatches = () => setMatches(media.matches);
+
+    updateMatches();
+    media.addEventListener("change", updateMatches);
+
+    return () => media.removeEventListener("change", updateMatches);
+  }, [query]);
+
+  return matches;
+}
+
 function DateRangePicker({
   fromInputId,
   toInputId,
@@ -101,6 +117,7 @@ function DateRangePicker({
   }, [applyRange]);
 
   const today = new Date();
+  const isMobile = useMediaQuery("(max-width: 760px)");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -116,13 +133,13 @@ function DateRangePicker({
           <ChevronDownIcon aria-hidden="true" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="bsa-date-range-content" align="start">
+      <PopoverContent className="bsa-date-range-content" align="start" collisionPadding={16}>
         <Calendar
           mode="range"
           defaultMonth={range?.from ?? today}
           selected={range}
           onSelect={applyRange}
-          numberOfMonths={2}
+          numberOfMonths={isMobile ? 1 : 2}
           className="bsa-date-range-calendar"
           classNames={{
             months: "bsa-date-range-months",

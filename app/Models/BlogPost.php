@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class BlogPost extends Model
@@ -99,5 +100,30 @@ class BlogPost extends Model
     public function getSeoDescriptionAttribute(): string
     {
         return $this->meta_description ?: Str::limit((string) $this->excerpt, 160, '');
+    }
+
+    public function getFeaturedImageUrlAttribute(): ?string
+    {
+        return self::publicAssetUrl($this->featured_image);
+    }
+
+    public function getOgImageUrlAttribute(): ?string
+    {
+        return self::publicAssetUrl($this->og_image ?: $this->featured_image);
+    }
+
+    public static function publicAssetUrl(?string $path): ?string
+    {
+        if (blank($path)) {
+            return null;
+        }
+
+        $path = (string) $path;
+
+        if (Str::startsWith($path, ['http://', 'https://', 'data:', '/'])) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
     }
 }

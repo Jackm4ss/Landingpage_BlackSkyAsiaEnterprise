@@ -6,6 +6,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -27,6 +28,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'phone',
         'password',
         'avatar',
+        'registration_source',
+        'registration_country_code',
+        'registration_referrer',
+        'date_of_birth',
+        'gender',
         'is_active',
     ];
 
@@ -49,6 +55,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'date_of_birth' => 'date',
             'is_active' => 'boolean',
             'password' => 'hashed',
         ];
@@ -59,5 +66,15 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $panel->getId() === 'admin'
             && $this->is_active
             && $this->hasRole('admin');
+    }
+
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function syncedTransactions(): HasMany
+    {
+        return $this->hasMany(SyncedTransaction::class);
     }
 }

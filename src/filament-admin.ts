@@ -1,5 +1,6 @@
 import { mountAdminDateRangePickers } from "./filament-admin-date-range";
 import { mountAdminCountryDropdowns } from "./filament-admin-country-dropdown";
+import { mountAdminTimePickers } from "./filament-admin-time-picker";
 
 const flagAssets = import.meta.glob("../node_modules/flag-icons/flags/4x3/*.svg", {
   eager: true,
@@ -30,6 +31,7 @@ const mountDashboardFlags = () => {
 const mountAdminEnhancements = () => {
   mountDashboardFlags();
   mountAdminDateRangePickers();
+  mountAdminTimePickers();
   mountAdminCountryDropdowns();
 };
 

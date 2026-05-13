@@ -4,8 +4,18 @@ import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "../components/ui/checkbox";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { RegistrationCountryDropdown } from "../components/RegistrationCountryDropdown";
 import { getAuthErrorMessage } from "../auth/auth-api";
 import { useRegisterMutation } from "../auth/auth-queries";
 import { registerSchema, type RegisterFormValues } from "../auth/auth-schemas";
@@ -18,12 +28,14 @@ export function RegisterPage() {
   const navigate = useNavigate();
   const registerMutation = useRegisterMutation();
   const [showPassword, setShowPassword] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       name: "",
       email: "",
+      countryCode: "",
       password: "",
       acceptedTerms: false,
     },
@@ -97,6 +109,29 @@ export function RegisterPage() {
             </div>
 
             <div className="auth-form__field">
+              <Label className="auth-form__label" htmlFor="register-country">
+                Country*
+              </Label>
+              <Controller
+                control={form.control}
+                name="countryCode"
+                render={({ field }) => (
+                  <RegistrationCountryDropdown
+                    id="register-country"
+                    value={field.value}
+                    onChange={field.onChange}
+                    invalid={Boolean(form.formState.errors.countryCode)}
+                  />
+                )}
+              />
+              {form.formState.errors.countryCode ? (
+                <p className="auth-form__field-error">
+                  {form.formState.errors.countryCode.message}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="auth-form__field">
               <Label className="auth-form__label" htmlFor="register-password">
                 Password*
               </Label>
@@ -148,7 +183,11 @@ export function RegisterPage() {
                   <a
                     className="auth-form__link"
                     href="#terms"
-                    onClick={(event) => event.preventDefault()}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setTermsOpen(true);
+                    }}
                   >
                     Terms & Conditions
                   </a>
@@ -200,6 +239,40 @@ export function RegisterPage() {
           />
         </div>
       </section>
+
+      <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+        <DialogContent className="auth-terms-dialog">
+          <DialogHeader>
+            <DialogTitle className="auth-terms-dialog__title">
+              Terms &amp; Conditions
+            </DialogTitle>
+            <DialogDescription className="auth-terms-dialog__description">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer
+              posuere erat a ante venenatis dapibus posuere velit aliquet. Cras
+              mattis consectetur purus sit amet fermentum.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="auth-terms-dialog__body">
+            <p>
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed posuere
+              consectetur est at lobortis. Aenean lacinia bibendum nulla sed
+              consectetur. Maecenas faucibus mollis interdum.
+            </p>
+            <p>
+              Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id
+              ligula porta felis euismod semper. Praesent commodo cursus magna,
+              vel scelerisque nisl consectetur et.
+            </p>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <button className="auth-terms-dialog__button" type="button">
+                Close
+              </button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

@@ -11,12 +11,34 @@ export type PublicEvent = {
   genre: string;
   date: string;
   start_date: string;
+  start_time: string | null;
+  time: string | null;
   end_date: string | null;
   status: "published" | "sold_out" | string;
   image_url: string | null;
   accent_color: string | null;
   glow_color: string | null;
   vendor_url: string | null;
+};
+
+export type PublicEventSection = {
+  id: number;
+  section_key: string;
+  title: string;
+  content: string | null;
+};
+
+export type PublicEventDetail = PublicEvent & {
+  timezone: string;
+  organizer_name: string;
+  organizer_url: string | null;
+  spotify_embed_url: string | null;
+  sections: PublicEventSection[];
+  meta_title: string | null;
+  meta_description: string | null;
+  meta_keywords: string | null;
+  canonical_url: string | null;
+  og_image: string | null;
 };
 
 export type PublicEventFilters = {
@@ -63,4 +85,12 @@ export async function getPublicEvents(query: PublicEventQuery = {}) {
   const { data } = await http.get<PublicEventsResponse>(`/api/v1/events?${params}`);
 
   return data;
+}
+
+export async function getPublicEvent(slug: string) {
+  const { data } = await http.get<{ data: PublicEventDetail }>(
+    `/api/v1/events/${encodeURIComponent(slug)}`,
+  );
+
+  return data.data;
 }

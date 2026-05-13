@@ -1,27 +1,25 @@
-import { useState, useEffect, type MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Menu, X } from "lucide-react";
+import { LogIn, Menu, UserRound, X } from "lucide-react";
+import { useCurrentUser } from "../auth/auth-queries";
 import logo from "../../assets/LOGO.png";
 
 const navLinks = [
   { label: "ABOUT", href: "/#about" },
   { label: "DISCOVER", href: "/discover" },
-  { label: "EVENTS", href: "/#events" },
   { label: "WORKS", href: "/#works" },
   { label: "NEWS", href: "/news" },
   { label: "CONTACT", href: "/#contact" },
 ];
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    onScroll();
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const { data: user } = useCurrentUser();
+  const isAdmin = user?.roles?.includes("admin") && !user.roles.includes("user");
+  const AccountIcon = user ? UserRound : LogIn;
+  const accountHref = user ? (isAdmin ? "/admin" : "/dashboard") : "/login";
+  const accountLabel = user ? (isAdmin ? "ADMIN" : "DASHBOARD") : "LOGIN";
+  const showTicketCta = !user;
 
   const handleLinkClick = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
     setMobileOpen(false);
@@ -52,15 +50,11 @@ export function Navbar() {
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
         style={{
-          background: scrolled
-            ? "linear-gradient(135deg, rgba(7,18,33,0.62), rgba(4,8,16,0.46))"
-            : "linear-gradient(to bottom, rgba(5,5,5,0.7) 0%, transparent 100%)",
-          backdropFilter: scrolled ? "blur(24px) saturate(160%)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(24px) saturate(160%)" : "none",
-          borderBottom: scrolled ? "1px solid rgba(255,255,255,0.14)" : "none",
-          boxShadow: scrolled
-            ? "0 18px 50px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.08)"
-            : "none",
+          background: "linear-gradient(135deg, rgba(7,18,33,0.62), rgba(4,8,16,0.46))",
+          backdropFilter: "blur(24px) saturate(160%)",
+          WebkitBackdropFilter: "blur(24px) saturate(160%)",
+          borderBottom: "1px solid rgba(255,255,255,0.14)",
+          boxShadow: "0 18px 50px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.08)",
         }}
       >
         <div className="max-w-[1600px] mx-auto px-8 py-5 flex items-center justify-between">
@@ -135,42 +129,49 @@ export function Navbar() {
           {/* CTA + Mobile */}
           <div className="flex items-center gap-4">
             <a
-              href="/login"
+              href={accountHref}
               onClick={() => setMobileOpen(false)}
-              className="hidden lg:flex items-center px-2 py-3 transition-colors duration-300"
+              className="hidden lg:flex items-center gap-2 px-4 py-3 transition-all duration-300 hover:-translate-y-0.5"
               style={{
-                background: "none",
-                border: "none",
-                color: "rgba(255,255,255,0.72)",
-                cursor: "pointer",
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontSize: "13px",
-                fontWeight: 700,
-                letterSpacing: 0,
-                textDecoration: "none",
-              }}
-            >
-              LOGIN
-            </a>
-            <a
-              href="/discover"
-              onClick={() => setMobileOpen(false)}
-              className="hidden lg:flex items-center gap-2 px-6 py-3 transition-all duration-300 hover:opacity-90"
-              style={{
-                background: "#0EA5E9",
-                fontFamily: "'Barlow Condensed', sans-serif",
-                fontWeight: 700,
-                fontSize: "12px",
-                letterSpacing: "0.25em",
+                background:
+                  "linear-gradient(135deg, rgba(255,255,255,0.12), rgba(14,165,233,0.08))",
+                border: "1px solid rgba(14,165,233,0.42)",
+                boxShadow: "4px 4px 0 rgba(14,165,233,0.16)",
                 color: "#fff",
-                border: "none",
                 cursor: "pointer",
-                clipPath: "polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)",
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontSize: "12px",
+                fontWeight: 800,
+                letterSpacing: "0.18em",
+                lineHeight: 1,
                 textDecoration: "none",
+                textTransform: "uppercase",
               }}
             >
-              GET TICKETS
+              <AccountIcon size={14} strokeWidth={2.6} aria-hidden="true" />
+              {accountLabel}
             </a>
+            {showTicketCta ? (
+              <a
+                href="/register"
+                onClick={() => setMobileOpen(false)}
+                className="hidden lg:flex items-center gap-2 px-6 py-3 transition-all duration-300 hover:opacity-90"
+                style={{
+                  background: "#0EA5E9",
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontWeight: 700,
+                  fontSize: "12px",
+                  letterSpacing: "0.25em",
+                  color: "#fff",
+                  border: "none",
+                  cursor: "pointer",
+                  clipPath: "polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%)",
+                  textDecoration: "none",
+                }}
+              >
+                GET TICKETS
+              </a>
+            ) : null}
             <button
               className="lg:hidden text-white p-1"
               onClick={() => setMobileOpen(true)}
@@ -246,45 +247,54 @@ export function Navbar() {
             </div>
             <div className="shrink-0 px-8 pb-12">
               <a
-                href="/login"
+                href={accountHref}
                 onClick={() => setMobileOpen(false)}
                 className="w-full py-4 mb-3"
                 style={{
-                  display: "block",
-                  background: "rgba(255,255,255,0.06)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                  background:
+                    "linear-gradient(135deg, rgba(255,255,255,0.12), rgba(14,165,233,0.08))",
                   fontFamily: "'Barlow Condensed', sans-serif",
-                  fontWeight: 700,
+                  fontWeight: 800,
                   fontSize: "14px",
-                  letterSpacing: 0,
+                  letterSpacing: "0.18em",
                   color: "#fff",
-                  border: "1px solid rgba(255,255,255,0.14)",
+                  border: "1px solid rgba(14,165,233,0.42)",
+                  boxShadow: "5px 5px 0 rgba(14,165,233,0.18)",
                   cursor: "pointer",
                   textAlign: "center",
                   textDecoration: "none",
+                  textTransform: "uppercase",
                 }}
               >
-                LOGIN
+                <AccountIcon size={16} strokeWidth={2.6} aria-hidden="true" />
+                {accountLabel}
               </a>
-              <a
-                href="/discover"
-                onClick={() => setMobileOpen(false)}
-                className="w-full py-4"
-                style={{
-                  display: "block",
-                  background: "#0EA5E9",
-                  fontFamily: "'Barlow Condensed', sans-serif",
-                  fontWeight: 700,
-                  fontSize: "14px",
-                  letterSpacing: 0,
-                  color: "#fff",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "center",
-                  textDecoration: "none",
-                }}
-              >
-                GET TICKETS
-              </a>
+              {showTicketCta ? (
+                <a
+                  href="/register"
+                  onClick={() => setMobileOpen(false)}
+                  className="w-full py-4"
+                  style={{
+                    display: "block",
+                    background: "#0EA5E9",
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    letterSpacing: 0,
+                    color: "#fff",
+                    border: "none",
+                    cursor: "pointer",
+                    textAlign: "center",
+                    textDecoration: "none",
+                  }}
+                >
+                  GET TICKETS
+                </a>
+              ) : null}
             </div>
           </motion.div>
         )}

@@ -62,7 +62,11 @@
                         <div class="bsa-source-list">
                             @foreach ($trafficSources as $source)
                                 <div class="bsa-source-row">
-                                    <i style="--source-color: {{ $source['color'] }}"></i>
+                                    <x-bsa.source-icon
+                                        :icon="$source['icon']"
+                                        :color="$source['color']"
+                                        :label="$source['label']"
+                                    />
                                     <div>
                                         <strong>{{ $source['label'] }}</strong>
                                         <span>{{ number_format($source['value']) }} registrations</span>

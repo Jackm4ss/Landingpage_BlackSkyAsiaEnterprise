@@ -58,6 +58,26 @@ class ListEvents extends Page
         'EXHIBITION' => 'Exhibition',
     ];
 
+    private const EVENT_SECTION_TYPES = [
+        'about' => 'About',
+        'event_details' => 'Event Details',
+        'on_sale_details' => 'On-Sale Details',
+        'ticket_pricing' => 'Seat Map & Ticket Pricing',
+        'location' => 'Location',
+        'ticketing_information' => 'Ticketing Information',
+        'important_information' => 'Important Information',
+        'admission_policy' => 'Admission Policy',
+        'fan_benefit_information' => 'Fan Benefit Information',
+        'event_guide' => 'Event Guide',
+        'custom' => 'Custom Section',
+    ];
+
+    private const CORE_EVENT_SECTION_KEYS = [
+        'about',
+        'event_details',
+        'location',
+    ];
+
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
 
     protected static ?string $navigationLabel = 'Events';
@@ -94,6 +114,8 @@ class ListEvents extends Page
 
     public mixed $eventImage = null;
 
+    public string $sectionToAdd = 'about';
+
     /**
      * @var array<string, mixed>
      */
@@ -120,6 +142,26 @@ class ListEvents extends Page
     public function genreOptions(): array
     {
         return self::EVENT_GENRES;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function sectionOptions(): array
+    {
+        return self::EVENT_SECTION_TYPES;
+    }
+
+    public function sectionHelpText(string $sectionKey): ?string
+    {
+        return match ($sectionKey) {
+            'event_details' => 'Venue, date, and time come from the main fields above. Add notes here only when this event needs extra detail copy.',
+            'location' => 'Venue, city, country, and directions are generated from the location fields above. Add parking or entry notes here when needed.',
+            'ticket_pricing' => 'Use short lines or bullets for pricing tiers, seat maps, and ticket categories.',
+            'ticketing_information' => 'Use this for ticket limits, purchase rules, and redemption instructions.',
+            'important_information', 'admission_policy' => 'Use bullets for rules, entry requirements, age limits, or prohibited items.',
+            default => null,
+        };
     }
 
     public function updatedSearch(): void
@@ -165,7 +207,9 @@ class ListEvents extends Page
 
     public function openEdit(int $eventId): void
     {
-        $event = Event::query()->findOrFail($eventId);
+        $event = Event::query()
+            ->with('sections')
+            ->findOrFail($eventId);
 
         $this->resetValidation();
         $this->eventImage = null;
@@ -179,6 +223,7 @@ class ListEvents extends Page
             'country_code' => $event->country_code,
             'genre' => $event->genre,
             'start_date' => $event->start_date?->toDateString(),
+            'start_time' => $event->start_time ? Str::of((string) $event->start_time)->beforeLast(':')->toString() : '',
             'end_date' => $event->end_date?->toDateString(),
             'date_display' => $event->date_display,
             'timezone' => $event->timezone,
@@ -188,6 +233,10 @@ class ListEvents extends Page
             'accent_color' => $event->accent_color,
             'glow_color' => $event->glow_color,
             'vendor_url' => $event->vendor_url,
+            'organizer_name' => $event->organizer_name,
+            'organizer_url' => $event->organizer_url,
+            'spotify_embed_url' => $event->spotify_embed_url,
+            'sections' => $this->eventSectionFormRows($event),
             'meta_title' => $event->meta_title,
             'meta_description' => $event->meta_description,
             'meta_keywords' => $event->meta_keywords,
@@ -195,6 +244,28 @@ class ListEvents extends Page
             'og_image' => $event->og_image,
         ];
         $this->isFormOpen = true;
+    }
+
+    public function addEventSection(): void
+    {
+        $sectionKey = array_key_exists($this->sectionToAdd, self::EVENT_SECTION_TYPES)
+            ? $this->sectionToAdd
+            : 'custom';
+
+        $this->form['sections'][] = [
+            'id' => null,
+            'section_key' => $sectionKey,
+            'title' => self::EVENT_SECTION_TYPES[$sectionKey],
+            'content' => '',
+            'is_enabled' => true,
+        ];
+    }
+
+    public function removeEventSection(int $index): void
+    {
+        unset($this->form['sections'][$index]);
+
+        $this->form['sections'] = array_values($this->form['sections'] ?? []);
     }
 
     public function closeEventForm(): void
@@ -213,6 +284,9 @@ class ListEvents extends Page
             : Str::slug((string) ($this->form['title'] ?? ''));
 
         $validated = $this->validate()['form'];
+        $sections = $validated['sections'] ?? [];
+        unset($validated['sections']);
+
         $slug = $validated['slug'];
 
         $event = $this->editingEventId
@@ -227,17 +301,20 @@ class ListEvents extends Page
         }
 
         $accentColor = $validated['accent_color'] ?? '#0EA5E9';
+        $spotifyEmbedUrl = $this->normalizeSpotifyEmbedUrl($validated['spotify_embed_url'] ?? null);
 
         $event->fill([
             ...$validated,
             'slug' => $slug,
             'country_code' => Str::upper($validated['country_code']),
             'genre' => Str::upper($validated['genre']),
+            'start_time' => filled($validated['start_time'] ?? null) ? $validated['start_time'] : null,
             'end_date' => filled($validated['end_date'] ?? null) ? $validated['end_date'] : null,
             'date_display' => filled($validated['date_display'] ?? null) ? $validated['date_display'] : null,
             'is_sold_out' => (bool) ($validated['is_sold_out'] ?? false),
             'image_url' => $imageUrl,
             'accent_color' => $accentColor,
+            'spotify_embed_url' => $spotifyEmbedUrl,
             'glow_color' => filled($validated['glow_color'] ?? null)
                 ? $validated['glow_color']
                 : $this->glowColorFromAccent($accentColor),
@@ -258,6 +335,7 @@ class ListEvents extends Page
                 : $imageUrl,
         ]);
         $event->save();
+        $this->syncEventSections($event, $sections);
 
         if ($this->eventImage instanceof TemporaryUploadedFile && $oldImageUrl !== $imageUrl) {
             $this->deleteStoredEventImage($oldImageUrl);
@@ -372,6 +450,7 @@ class ListEvents extends Page
             'form.country_code' => ['required', 'string', 'size:2', 'regex:/^[A-Za-z]{2}$/'],
             'form.genre' => ['required', 'string', 'max:80', Rule::in(array_keys(self::EVENT_GENRES))],
             'form.start_date' => ['required', 'date'],
+            'form.start_time' => ['nullable', 'date_format:H:i'],
             'form.end_date' => ['nullable', 'date', 'after_or_equal:form.start_date'],
             'form.date_display' => ['nullable', 'string', 'max:255'],
             'form.timezone' => ['required', 'string', 'max:64'],
@@ -388,6 +467,14 @@ class ListEvents extends Page
             'form.accent_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'form.glow_color' => ['nullable', 'string', 'max:80'],
             'form.vendor_url' => ['nullable', 'url', 'max:2048'],
+            'form.organizer_name' => ['nullable', 'string', 'max:255'],
+            'form.organizer_url' => ['nullable', 'url', 'max:2048'],
+            'form.spotify_embed_url' => ['nullable', 'url', 'max:2048'],
+            'form.sections' => ['array', 'max:12'],
+            'form.sections.*.section_key' => ['required', Rule::in(array_keys(self::EVENT_SECTION_TYPES))],
+            'form.sections.*.title' => ['nullable', 'string', 'max:255'],
+            'form.sections.*.content' => ['nullable', 'string', 'max:20000'],
+            'form.sections.*.is_enabled' => ['boolean'],
             'form.meta_title' => ['nullable', 'string', 'max:255'],
             'form.meta_description' => ['nullable', 'string', 'max:1000'],
             'form.meta_keywords' => ['nullable', 'string', 'max:255'],
@@ -398,6 +485,8 @@ class ListEvents extends Page
 
     private function resetEventForm(): void
     {
+        $this->sectionToAdd = 'about';
+
         $this->form = [
             'title' => '',
             'slug' => '',
@@ -407,6 +496,7 @@ class ListEvents extends Page
             'country_code' => '',
             'genre' => '',
             'start_date' => '',
+            'start_time' => '',
             'end_date' => '',
             'date_display' => '',
             'timezone' => 'Asia/Kuala_Lumpur',
@@ -416,6 +506,10 @@ class ListEvents extends Page
             'accent_color' => '#0EA5E9',
             'glow_color' => '',
             'vendor_url' => '',
+            'organizer_name' => 'Black Sky Enterprise',
+            'organizer_url' => '',
+            'spotify_embed_url' => '',
+            'sections' => $this->eventSectionFormRows(),
             'meta_title' => '',
             'meta_description' => '',
             'meta_keywords' => '',
@@ -501,6 +595,41 @@ class ListEvents extends Page
         Storage::disk('public')->delete(Str::after($path, '/storage/'));
     }
 
+    private function normalizeSpotifyEmbedUrl(?string $url): ?string
+    {
+        if (blank($url)) {
+            return null;
+        }
+
+        $parts = parse_url(trim($url));
+        $host = Str::lower((string) ($parts['host'] ?? ''));
+        $path = trim((string) ($parts['path'] ?? ''), '/');
+
+        if (! in_array($host, ['open.spotify.com', 'www.open.spotify.com'], true) || $path === '') {
+            throw ValidationException::withMessages([
+                'form.spotify_embed_url' => 'Use a Spotify URL from open.spotify.com.',
+            ]);
+        }
+
+        $segments = explode('/', $path);
+
+        if (($segments[0] ?? null) === 'embed') {
+            $type = $segments[1] ?? '';
+            $id = $segments[2] ?? '';
+        } else {
+            $type = $segments[0] ?? '';
+            $id = $segments[1] ?? '';
+        }
+
+        if (! in_array($type, ['artist', 'album', 'playlist', 'track', 'show', 'episode'], true) || $id === '') {
+            throw ValidationException::withMessages([
+                'form.spotify_embed_url' => 'Use a Spotify artist, album, playlist, track, show, or episode URL.',
+            ]);
+        }
+
+        return 'https://open.spotify.com/embed/' . $type . '/' . $id . '?utm_source=generator';
+    }
+
     /**
      * @param array<string, mixed> $event
      */
@@ -521,5 +650,85 @@ class ListEvents extends Page
         ]);
 
         return Str::limit(implode(' - ', $parts) ?: $event['title'], 1000, '');
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $sections
+     */
+    private function syncEventSections(Event $event, array $sections): void
+    {
+        $event->sections()->delete();
+
+        foreach (array_values($sections) as $index => $section) {
+            $content = trim((string) ($section['content'] ?? ''));
+
+            if ($content === '') {
+                continue;
+            }
+
+            $sectionKey = (string) ($section['section_key'] ?? 'custom');
+            $title = trim((string) ($section['title'] ?? ''));
+
+            if (! array_key_exists($sectionKey, self::EVENT_SECTION_TYPES)) {
+                $sectionKey = 'custom';
+            }
+
+            $event->sections()->create([
+                'section_key' => $sectionKey,
+                'title' => $title !== '' ? $title : self::EVENT_SECTION_TYPES[$sectionKey],
+                'content' => $content,
+                'sort_order' => $index,
+                'is_enabled' => (bool) ($section['is_enabled'] ?? true),
+            ]);
+        }
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function eventSectionFormRows(?Event $event = null): array
+    {
+        $rows = $event?->relationLoaded('sections')
+            ? $event->sections
+                ->map(fn ($section): array => [
+                    'id' => $section->id,
+                    'section_key' => $section->section_key,
+                    'title' => $section->title,
+                    'content' => $section->content,
+                    'is_enabled' => $section->is_enabled,
+                ])
+                ->values()
+                ->all()
+            : [];
+
+        $existingKeys = collect($rows)
+            ->pluck('section_key')
+            ->filter()
+            ->all();
+
+        foreach (self::CORE_EVENT_SECTION_KEYS as $sectionKey) {
+            if (in_array($sectionKey, $existingKeys, true)) {
+                continue;
+            }
+
+            $rows[] = [
+                'id' => null,
+                'section_key' => $sectionKey,
+                'title' => self::EVENT_SECTION_TYPES[$sectionKey],
+                'content' => $this->defaultSectionContent($sectionKey, $event),
+                'is_enabled' => true,
+            ];
+        }
+
+        return array_values($rows);
+    }
+
+    private function defaultSectionContent(string $sectionKey, ?Event $event = null): string
+    {
+        if ($sectionKey === 'about' && filled($event?->subtitle)) {
+            return (string) $event->subtitle;
+        }
+
+        return '';
     }
 }

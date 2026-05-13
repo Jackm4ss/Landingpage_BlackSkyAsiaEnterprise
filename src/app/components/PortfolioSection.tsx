@@ -1,21 +1,23 @@
-import { useState, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, useInView } from "motion/react";
-import { ArrowUpRight, ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { Link } from "react-router";
+import {
+  getPortfolioWorks,
+  type PortfolioWorkSummary,
+} from "../portfolio/portfolio-api";
 import GradientText from "./GradientText";
 
-const img1 =
-  "https://images.unsplash.com/photo-1722506224957-7695c097ff88?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcnRpc3QlMjBwZXJmb3JtaW5nJTIwbXVzaWMlMjBzdGFnZSUyMHB1cnBsZSUyMGJsdWUlMjBsaWdodHN8ZW58MXx8fHwxNzc4MjM5NDIwfDA&ixlib=rb-4.1.0&q=80&w=1080";
-const img2 =
-  "https://images.unsplash.com/photo-1760218832333-5b16f66ebc1a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcm93ZCUyMGNvbmNlcnQlMjBoYW5kcyUyMHVwJTIwc2lsaG91ZXR0ZSUyMHN0YWdlJTIwbGlnaHRzfGVufDF8fHx8MTc3ODIzOTQyMXww&ixlib=rb-4.1.0&q=80&w=1080";
-const img3 =
-  "https://images.unsplash.com/photo-1590699306463-dbb2b13c0ca0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtdXNpYyUyMGVudGVydGFpbm1lbnQlMjBlZGl0b3JpYWwlMjBwaG90b2dyYXBoeSUyMGRhcmt8ZW58MXx8fHwxNzc4MjM5NDIxfDA&ixlib=rb-4.1.0&q=80&w=1080";
-const img4 =
-  "https://images.unsplash.com/photo-1765224747205-3c9c23f0553c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb25jZXJ0JTIwc3RhZ2UlMjBsaWdodGluZyUyMGNyb3dkJTIwZGFyayUyMGRyYW1hdGljfGVufDF8fHx8MTc3ODIzOTQxNnww&ixlib=rb-4.1.0&q=80&w=1080";
-const img5 =
-  "https://images.unsplash.com/photo-1774112560513-38b6ec3ba898?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlbGVjdHJvbmljJTIwbXVzaWMlMjBmZXN0aXZhbCUyMGNvbG9yZnVsJTIwbGFzZXIlMjBzaG93fGVufDF8fHx8MTc3ODIzOTQxN3ww&ixlib=rb-4.1.0&q=80&w=1080";
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1400&q=80";
+const cardDescriptionColor = "rgba(235,245,255,0.78)";
+const cardMetaColor = "rgba(226,238,255,0.68)";
+const placement: Array<Work["type"]> = ["feature", "tall", "square", "square", "banner"];
 
 interface Work {
   id: number;
+  slug: string;
   title: string;
   category: string;
   year: string;
@@ -23,99 +25,37 @@ interface Work {
   accentColor: string;
   image: string;
   description: string;
-  // bento placement
-  gridCol: string;
-  gridRow: string;
   type: "feature" | "tall" | "square" | "banner";
 }
 
-// Bento layout on 3-column grid, 3-row grid:
-// [ W1: col 1-2, row 1 — WIDE FEATURE ] [ W2: col 3, row 1-2 — TALL PORTRAIT ]
-// [ W3: col 1, row 2 — SQUARE         ] [ W4: col 2, row 2 — SQUARE          ] [ W2 ]
-// [ W5: col 1-3, row 3 — FULL BANNER  ]
-const works: Work[] = [
-  {
-    id: 1,
-    title: "NEON PULSE",
-    category: "Arena Concert",
-    year: "2025",
-    location: "Kuala Lumpur",
-    accentColor: "#A855F7",
-    image: img1,
-    description: "A sold-out 3-night arena run — 60,000+ fans, world-class production.",
-    gridCol: "1 / 3",
-    gridRow: "1",
-    type: "feature",
-  },
-  {
-    id: 2,
-    title: "TIDAL WAVE",
-    category: "Music Festival",
-    year: "2025",
-    location: "Penang",
-    accentColor: "#0EA5E9",
-    image: img2,
-    description: "Malaysia's largest beachside music festival — 3 stages, 2 days.",
-    gridCol: "3",
-    gridRow: "1 / 3",
-    type: "tall",
-  },
-  {
-    id: 3,
-    title: "DARK MATTER",
-    category: "Media Production",
-    year: "2024",
-    location: "Regional SEA",
-    accentColor: "#E11D48",
-    image: img3,
-    description: "Original docu-series on SEA's underground music culture.",
-    gridCol: "1",
-    gridRow: "2",
-    type: "square",
-  },
-  {
-    id: 4,
-    title: "ULTRAVIOLET",
-    category: "Festival",
-    year: "2024",
-    location: "Singapore",
-    accentColor: "#FFB700",
-    image: img4,
-    description: "Groundbreaking electronic music with real-time visual sync.",
-    gridCol: "2",
-    gridRow: "2",
-    type: "square",
-  },
-  {
-    id: 5,
-    title: "VOLTAGE — THE ASIA TOUR",
-    category: "Arena Tour",
-    year: "2024",
-    location: "8 Cities · SEA",
-    accentColor: "#F97316",
-    image: img5,
-    description: "The largest coordinated arena tour in Southeast Asian history — 8 cities, 22 sold-out nights, 2 million+ in attendance.",
-    gridCol: "1 / 4",
-    gridRow: "3",
-    type: "banner",
-  },
-];
-
-const categories = ["ALL", "CONCERT", "FESTIVAL", "MEDIA"];
-const cardDescriptionColor = "rgba(235,245,255,0.78)";
-const cardMetaColor = "rgba(226,238,255,0.68)";
-
-function matchesCategory(work: Work, filter: string) {
-  if (filter === "ALL") return true;
-  if (filter === "CONCERT") return /concert|tour/i.test(work.category);
-  if (filter === "FESTIVAL") return /festival/i.test(work.category);
-  if (filter === "MEDIA") return /media/i.test(work.category);
-  return true;
+function toWork(work: PortfolioWorkSummary, index: number): Work {
+  return {
+    id: work.id,
+    slug: work.slug,
+    title: work.title,
+    category: work.category,
+    year: work.year,
+    location: work.location,
+    accentColor: work.accent_color || "#F97316",
+    image: work.featured_image ?? FALLBACK_IMAGE,
+    description: work.excerpt,
+    type: placement[index] ?? "square",
+  };
 }
 
-// FEATURE card: wide, image with overlay, large title
+function CardLink({ work }: { work: Work }) {
+  return (
+    <Link
+      to={`/portfolio/${work.slug}`}
+      className="absolute inset-0 z-20"
+      aria-label={`View ${work.title}`}
+    />
+  );
+}
+
 function FeatureCard({ work, delay }: { work: Work; delay: number }) {
   const [hovered, setHovered] = useState(false);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -130,10 +70,12 @@ function FeatureCard({ work, delay }: { work: Work; delay: number }) {
         transition: "border-color 0.4s",
       }}
     >
+      <CardLink work={work} />
       <img
         src={work.image}
         alt={work.title}
         className="w-full h-full object-cover"
+        loading="lazy"
         style={{
           transform: hovered ? "scale(1.05)" : "scale(1)",
           transition: "transform 0.8s ease",
@@ -141,16 +83,21 @@ function FeatureCard({ work, delay }: { work: Work; delay: number }) {
           inset: 0,
         }}
       />
-      {/* Gradient overlay */}
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(5,5,5,0.22) 0%, rgba(5,5,5,0.48) 48%, rgba(5,5,5,0.94) 100%), linear-gradient(135deg, rgba(5,5,5,0.8) 0%, rgba(5,5,5,0.18) 50%, rgba(5,5,5,0.62) 100%)" }} />
-      {/* Glow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(5,5,5,0.22) 0%, rgba(5,5,5,0.48) 48%, rgba(5,5,5,0.94) 100%), linear-gradient(135deg, rgba(5,5,5,0.8) 0%, rgba(5,5,5,0.18) 50%, rgba(5,5,5,0.62) 100%)",
+        }}
+      />
       <motion.div
         animate={{ opacity: hovered ? 1 : 0 }}
         className="absolute inset-0"
-        style={{ background: `radial-gradient(circle at 20% 80%, ${work.accentColor}20 0%, transparent 65%)` }}
+        style={{
+          background: `radial-gradient(circle at 20% 80%, ${work.accentColor}20 0%, transparent 65%)`,
+        }}
       />
 
-      {/* Arrow */}
       <div
         aria-hidden="true"
         className="absolute top-5 right-5 flex lg:hidden items-center justify-center"
@@ -167,30 +114,84 @@ function FeatureCard({ work, delay }: { work: Work; delay: number }) {
         <ArrowUpRight size={18} color="#fff" />
       </motion.div>
 
-      {/* Category */}
       <div
         className="absolute top-5 left-5"
-        style={{ background: "rgba(5,5,5,0.75)", backdropFilter: "blur(8px)", padding: "5px 12px", border: `1px solid ${work.accentColor}30` }}
+        style={{
+          background: "rgba(5,5,5,0.75)",
+          backdropFilter: "blur(8px)",
+          padding: "5px 12px",
+          border: `1px solid ${work.accentColor}30`,
+        }}
       >
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "10px", letterSpacing: "0.3em", color: work.accentColor }}>
+        <span
+          style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 700,
+            fontSize: "10px",
+            letterSpacing: "0.3em",
+            color: work.accentColor,
+          }}
+        >
           {work.category.toUpperCase()}
         </span>
       </div>
 
-      {/* Content bottom */}
       <div className="absolute bottom-0 left-0 right-0 p-7">
-        <div style={{ width: hovered ? 48 : 28, height: 2, background: `linear-gradient(90deg, ${work.accentColor}, transparent)`, transition: "width 0.4s", marginBottom: "12px" }} />
-        <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 3vw, 3.2rem)", lineHeight: 0.92, letterSpacing: "-0.01em", color: "#fff", textTransform: "uppercase", marginBottom: "8px" }}>
+        <div
+          style={{
+            width: hovered ? 48 : 28,
+            height: 2,
+            background: `linear-gradient(90deg, ${work.accentColor}, transparent)`,
+            transition: "width 0.4s",
+            marginBottom: "12px",
+          }}
+        />
+        <h3
+          style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 900,
+            fontSize: "clamp(2rem, 3vw, 3.2rem)",
+            lineHeight: 0.92,
+            letterSpacing: "-0.01em",
+            color: "#fff",
+            textTransform: "uppercase",
+            marginBottom: "8px",
+          }}
+        >
           {work.title}
         </h3>
-        <p style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: "0.82rem", color: cardDescriptionColor, marginBottom: "12px" }}>
+        <p
+          style={{
+            fontFamily: "'Barlow', sans-serif",
+            fontWeight: 400,
+            fontSize: "0.82rem",
+            color: cardDescriptionColor,
+            marginBottom: "12px",
+          }}
+        >
           {work.description}
         </p>
         <div className="flex items-center justify-between">
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "11px", letterSpacing: "0.2em", color: cardMetaColor }}>
+          <span
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              fontSize: "11px",
+              letterSpacing: "0.2em",
+              color: cardMetaColor,
+            }}
+          >
             {work.location.toUpperCase()}
           </span>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "11px", letterSpacing: "0.2em", color: work.accentColor }}>
+          <span
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              fontSize: "11px",
+              letterSpacing: "0.2em",
+              color: work.accentColor,
+            }}
+          >
             {work.year}
           </span>
         </div>
@@ -199,9 +200,9 @@ function FeatureCard({ work, delay }: { work: Work; delay: number }) {
   );
 }
 
-// TALL card: portrait format, fills full height
 function TallCard({ work, delay }: { work: Work; delay: number }) {
   const [hovered, setHovered] = useState(false);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 24 }}
@@ -216,16 +217,34 @@ function TallCard({ work, delay }: { work: Work; delay: number }) {
         transition: "border-color 0.4s",
       }}
     >
+      <CardLink work={work} />
       <img
         src={work.image}
         alt={work.title}
         className="w-full h-full object-cover"
-        style={{ transform: hovered ? "scale(1.06)" : "scale(1)", transition: "transform 0.9s ease", position: "absolute", inset: 0 }}
+        loading="lazy"
+        style={{
+          transform: hovered ? "scale(1.06)" : "scale(1)",
+          transition: "transform 0.9s ease",
+          position: "absolute",
+          inset: 0,
+        }}
       />
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(5,5,5,0.28) 0%, rgba(5,5,5,0.55) 45%, rgba(5,5,5,0.96) 100%)" }} />
-      <motion.div animate={{ opacity: hovered ? 1 : 0 }} className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 90%, ${work.accentColor}28 0%, transparent 65%)` }} />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(5,5,5,0.28) 0%, rgba(5,5,5,0.55) 45%, rgba(5,5,5,0.96) 100%)",
+        }}
+      />
+      <motion.div
+        animate={{ opacity: hovered ? 1 : 0 }}
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(circle at 50% 90%, ${work.accentColor}28 0%, transparent 65%)`,
+        }}
+      />
 
-      {/* Arrow */}
       <div
         aria-hidden="true"
         className="absolute top-5 right-5 flex lg:hidden items-center justify-center"
@@ -242,29 +261,71 @@ function TallCard({ work, delay }: { work: Work; delay: number }) {
         <ArrowUpRight size={16} color="#fff" />
       </motion.div>
 
-      {/* Category */}
       <div
         className="absolute top-5 left-5"
         style={{ background: "rgba(5,5,5,0.8)", backdropFilter: "blur(8px)", padding: "4px 10px" }}
       >
-        <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "10px", letterSpacing: "0.28em", color: work.accentColor }}>
+        <span
+          style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 700,
+            fontSize: "10px",
+            letterSpacing: "0.28em",
+            color: work.accentColor,
+          }}
+        >
           {work.category.toUpperCase()}
         </span>
       </div>
 
-      {/* Bottom content */}
       <div className="absolute bottom-0 left-0 right-0 p-6">
-        <div style={{ width: hovered ? 40 : 20, height: 2, background: work.accentColor, transition: "width 0.4s", marginBottom: "10px" }} />
-        <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem, 2.2vw, 2.4rem)", lineHeight: 0.93, letterSpacing: "-0.01em", color: "#fff", textTransform: "uppercase", marginBottom: "8px" }}>
+        <div
+          style={{
+            width: hovered ? 40 : 20,
+            height: 2,
+            background: work.accentColor,
+            transition: "width 0.4s",
+            marginBottom: "10px",
+          }}
+        />
+        <h3
+          style={{
+            fontFamily: "'Barlow Condensed', sans-serif",
+            fontWeight: 900,
+            fontSize: "clamp(1.6rem, 2.2vw, 2.4rem)",
+            lineHeight: 0.93,
+            letterSpacing: "-0.01em",
+            color: "#fff",
+            textTransform: "uppercase",
+            marginBottom: "8px",
+          }}
+        >
           {work.title}
         </h3>
-        <p style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: "0.78rem", color: cardDescriptionColor, lineHeight: 1.65, marginBottom: "12px" }}>
+        <p
+          style={{
+            fontFamily: "'Barlow', sans-serif",
+            fontWeight: 400,
+            fontSize: "0.78rem",
+            color: cardDescriptionColor,
+            lineHeight: 1.65,
+            marginBottom: "12px",
+          }}
+        >
           {work.description}
         </p>
         <div className="flex items-center gap-2">
           <div style={{ width: 6, height: 6, borderRadius: "50%", background: work.accentColor }} />
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "10px", letterSpacing: "0.25em", color: cardMetaColor }}>
-            {work.location.toUpperCase()} — {work.year}
+          <span
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              fontSize: "10px",
+              letterSpacing: "0.25em",
+              color: cardMetaColor,
+            }}
+          >
+            {work.location.toUpperCase()} - {work.year}
           </span>
         </div>
       </div>
@@ -272,9 +333,9 @@ function TallCard({ work, delay }: { work: Work; delay: number }) {
   );
 }
 
-// SQUARE card: image top + content bottom
 function SquareCard({ work, delay }: { work: Work; delay: number }) {
   const [hovered, setHovered] = useState(false);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -290,18 +351,30 @@ function SquareCard({ work, delay }: { work: Work; delay: number }) {
         transition: "border-color 0.4s",
       }}
     >
-      {/* Image top ~55% */}
+      <CardLink work={work} />
       <div className="relative overflow-hidden" style={{ flex: "0 0 58%" }}>
         <img
           src={work.image}
           alt={work.title}
           className="w-full h-full object-cover"
-          style={{ transform: hovered ? "scale(1.07)" : "scale(1)", transition: "transform 0.8s ease" }}
+          loading="lazy"
+          style={{
+            transform: hovered ? "scale(1.07)" : "scale(1)",
+            transition: "transform 0.8s ease",
+          }}
         />
-        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 40%, rgba(10,10,10,0.97) 100%)" }} />
-        <motion.div animate={{ opacity: hovered ? 1 : 0 }} className="absolute inset-0" style={{ background: `radial-gradient(circle at 50% 80%, ${work.accentColor}20 0%, transparent 65%)` }} />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(180deg, transparent 40%, rgba(10,10,10,0.97) 100%)" }}
+        />
+        <motion.div
+          animate={{ opacity: hovered ? 1 : 0 }}
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(circle at 50% 80%, ${work.accentColor}20 0%, transparent 65%)`,
+          }}
+        />
 
-        {/* Arrow */}
         <div
           aria-hidden="true"
           className="absolute top-4 right-4 flex lg:hidden items-center justify-center"
@@ -318,21 +391,46 @@ function SquareCard({ work, delay }: { work: Work; delay: number }) {
           <ArrowUpRight size={14} color="#fff" />
         </motion.div>
 
-        {/* Category badge */}
         <div className="absolute top-4 left-4" style={{ background: work.accentColor, padding: "3px 10px" }}>
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "9px", letterSpacing: "0.3em", color: "#fff" }}>
+          <span
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              fontSize: "9px",
+              letterSpacing: "0.3em",
+              color: "#fff",
+            }}
+          >
             {work.category.toUpperCase()}
           </span>
         </div>
       </div>
 
-      {/* Content bottom */}
       <div className="flex-1 flex flex-col justify-between p-5">
         <div>
-          <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(1.3rem, 2vw, 1.9rem)", lineHeight: 0.94, letterSpacing: "-0.01em", color: "#fff", textTransform: "uppercase", marginBottom: "6px" }}>
+          <h3
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 900,
+              fontSize: "clamp(1.3rem, 2vw, 1.9rem)",
+              lineHeight: 0.94,
+              letterSpacing: "-0.01em",
+              color: "#fff",
+              textTransform: "uppercase",
+              marginBottom: "6px",
+            }}
+          >
             {work.title}
           </h3>
-          <p style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: "0.75rem", color: cardDescriptionColor, lineHeight: 1.65 }}>
+          <p
+            style={{
+              fontFamily: "'Barlow', sans-serif",
+              fontWeight: 400,
+              fontSize: "0.75rem",
+              color: cardDescriptionColor,
+              lineHeight: 1.65,
+            }}
+          >
             {work.description}
           </p>
         </div>
@@ -341,10 +439,26 @@ function SquareCard({ work, delay }: { work: Work; delay: number }) {
           style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
         >
           <div style={{ width: 5, height: 5, borderRadius: "50%", background: work.accentColor }} />
-          <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "10px", letterSpacing: "0.22em", color: cardMetaColor }}>
+          <span
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              fontSize: "10px",
+              letterSpacing: "0.22em",
+              color: cardMetaColor,
+            }}
+          >
             {work.location.toUpperCase()}
           </span>
-          <span style={{ marginLeft: "auto", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "11px", color: work.accentColor }}>
+          <span
+            style={{
+              marginLeft: "auto",
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 700,
+              fontSize: "11px",
+              color: work.accentColor,
+            }}
+          >
             {work.year}
           </span>
         </div>
@@ -353,9 +467,9 @@ function SquareCard({ work, delay }: { work: Work; delay: number }) {
   );
 }
 
-// BANNER card: full-width cinematic strip
 function BannerCard({ work, delay }: { work: Work; delay: number }) {
   const [hovered, setHovered] = useState(false);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -370,51 +484,107 @@ function BannerCard({ work, delay }: { work: Work; delay: number }) {
         transition: "border-color 0.4s",
       }}
     >
+      <CardLink work={work} />
       <img
         src={work.image}
         alt={work.title}
         className="w-full h-full object-cover"
-        style={{ transform: hovered ? "scale(1.04)" : "scale(1)", transition: "transform 1s ease", position: "absolute", inset: 0 }}
+        loading="lazy"
+        style={{
+          transform: hovered ? "scale(1.04)" : "scale(1)",
+          transition: "transform 1s ease",
+          position: "absolute",
+          inset: 0,
+        }}
       />
-      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0.88) 100%), linear-gradient(90deg, rgba(5,5,5,0.96) 0%, rgba(5,5,5,0.58) 50%, rgba(5,5,5,0.78) 100%)" }} />
-      <motion.div animate={{ opacity: hovered ? 1 : 0 }} className="absolute inset-0" style={{ background: `radial-gradient(circle at 30% 50%, ${work.accentColor}18 0%, transparent 60%)` }} />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(5,5,5,0.2) 0%, rgba(5,5,5,0.88) 100%), linear-gradient(90deg, rgba(5,5,5,0.96) 0%, rgba(5,5,5,0.58) 50%, rgba(5,5,5,0.78) 100%)",
+        }}
+      />
+      <motion.div
+        animate={{ opacity: hovered ? 1 : 0 }}
+        className="absolute inset-0"
+        style={{
+          background: `radial-gradient(circle at 30% 50%, ${work.accentColor}18 0%, transparent 60%)`,
+        }}
+      />
 
-      {/* Content — horizontal layout */}
       <div className="relative z-10 h-full flex items-center px-10 gap-12">
-        {/* Left: Number + title */}
         <div className="flex-shrink-0">
           <div className="flex items-center gap-4 mb-3">
             <div style={{ background: work.accentColor, padding: "4px 12px" }}>
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "10px", letterSpacing: "0.3em", color: "#fff" }}>
+              <span
+                style={{
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontWeight: 700,
+                  fontSize: "10px",
+                  letterSpacing: "0.3em",
+                  color: "#fff",
+                }}
+              >
                 {work.category.toUpperCase()}
               </span>
             </div>
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "11px", letterSpacing: "0.2em", color: work.accentColor }}>
+            <span
+              style={{
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 700,
+                fontSize: "11px",
+                letterSpacing: "0.2em",
+                color: work.accentColor,
+              }}
+            >
               {work.year}
             </span>
           </div>
-          <h3 style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2rem, 3.5vw, 4rem)", lineHeight: 0.9, letterSpacing: "-0.02em", color: "#fff", textTransform: "uppercase" }}>
+          <h3
+            style={{
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontWeight: 900,
+              fontSize: "clamp(2rem, 3.5vw, 4rem)",
+              lineHeight: 0.9,
+              letterSpacing: "-0.02em",
+              color: "#fff",
+              textTransform: "uppercase",
+            }}
+          >
             {work.title}
           </h3>
         </div>
 
-        {/* Divider */}
         <div style={{ width: 1, height: 80, background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
 
-        {/* Middle: desc + location */}
         <div className="flex-1 max-w-sm">
-          <p style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: "0.9rem", color: cardDescriptionColor, lineHeight: 1.7 }}>
+          <p
+            style={{
+              fontFamily: "'Barlow', sans-serif",
+              fontWeight: 400,
+              fontSize: "0.9rem",
+              color: cardDescriptionColor,
+              lineHeight: 1.7,
+            }}
+          >
             {work.description}
           </p>
           <div className="flex items-center gap-2 mt-3">
             <div style={{ width: 5, height: 5, borderRadius: "50%", background: work.accentColor }} />
-            <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "11px", letterSpacing: "0.25em", color: cardMetaColor }}>
+            <span
+              style={{
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 700,
+                fontSize: "11px",
+                letterSpacing: "0.25em",
+                color: cardMetaColor,
+              }}
+            >
               {work.location.toUpperCase()}
             </span>
           </div>
         </div>
 
-        {/* Right: CTA */}
         <div className="flex-shrink-0 ml-auto">
           <motion.div
             animate={{
@@ -431,13 +601,15 @@ function BannerCard({ work, delay }: { work: Work; delay: number }) {
               fontSize: "11px",
               letterSpacing: "0.28em",
               color: "#fff",
-              cursor: "pointer",
             }}
           >
             VIEW PROJECT
             <ArrowRight
               size={13}
-              style={{ transform: hovered ? "translateX(4px)" : "translateX(0)", transition: "transform 0.3s" }}
+              style={{
+                transform: hovered ? "translateX(4px)" : "translateX(0)",
+                transition: "transform 0.3s",
+              }}
             />
           </motion.div>
         </div>
@@ -446,25 +618,41 @@ function BannerCard({ work, delay }: { work: Work; delay: number }) {
   );
 }
 
+function renderCard(work: Work, index: number) {
+  const delay = 0.05 + index * 0.07;
+
+  if (work.type === "square") {
+    return <SquareCard work={work} delay={delay} />;
+  }
+
+  if (work.type === "tall") {
+    return <TallCard work={work} delay={delay} />;
+  }
+
+  if (work.type === "banner") {
+    return <BannerCard work={work} delay={delay} />;
+  }
+
+  return <FeatureCard work={work} delay={delay} />;
+}
+
 export function PortfolioSection() {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const sectionRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
-  const filteredWorks = works.filter((work) => matchesCategory(work, activeFilter));
-
-  const renderFilteredCard = (work: Work, index: number) => {
-    const delay = 0.05 + index * 0.07;
-
-    if (work.type === "square") {
-      return <SquareCard work={work} delay={delay} />;
-    }
-
-    if (work.type === "tall") {
-      return <TallCard work={work} delay={delay} />;
-    }
-
-    return <FeatureCard work={work} delay={delay} />;
-  };
+  const worksQuery = useQuery({
+    queryKey: ["landing-portfolio"],
+    queryFn: () => getPortfolioWorks({ perPage: 8 }),
+  });
+  const works = useMemo(
+    () => (worksQuery.data?.data ?? []).map(toWork),
+    [worksQuery.data?.data],
+  );
+  const categoryOptions = useMemo(
+    () => ["ALL", ...Array.from(new Set(works.map((work) => work.category)))],
+    [works],
+  );
+  const filteredWorks = works.filter((work) => activeFilter === "ALL" || work.category === activeFilter);
 
   return (
     <section
@@ -473,11 +661,15 @@ export function PortfolioSection() {
       className="relative py-32 overflow-hidden"
       style={{ background: "#050505" }}
     >
-      {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0" style={{ height: "1px", background: "linear-gradient(90deg, transparent, rgba(249,115,22,0.35), transparent)" }} />
+      <div
+        className="absolute top-0 left-0 right-0"
+        style={{
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, rgba(249,115,22,0.35), transparent)",
+        }}
+      />
 
       <div className="max-w-[1600px] mx-auto px-8 md:px-16">
-        {/* Header */}
         <div className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-8 mb-14">
           <div>
             <motion.div
@@ -486,8 +678,22 @@ export function PortfolioSection() {
               transition={{ duration: 0.6 }}
               className="flex items-center gap-4 mb-4"
             >
-              <div style={{ width: 32, height: 2, background: "linear-gradient(90deg, #F97316, transparent)" }} />
-              <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: "12px", letterSpacing: "0.4em", color: "#F97316" }}>
+              <div
+                style={{
+                  width: 32,
+                  height: 2,
+                  background: "linear-gradient(90deg, #F97316, transparent)",
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  letterSpacing: "0.4em",
+                  color: "#F97316",
+                }}
+              >
                 SELECTED WORKS
               </span>
             </motion.div>
@@ -495,7 +701,15 @@ export function PortfolioSection() {
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: "clamp(2.8rem, 6vw, 7rem)", lineHeight: 0.9, letterSpacing: "-0.01em", color: "#FFFFFF", textTransform: "uppercase" }}
+              style={{
+                fontFamily: "'Barlow Condensed', sans-serif",
+                fontWeight: 900,
+                fontSize: "clamp(2.8rem, 6vw, 7rem)",
+                lineHeight: 0.9,
+                letterSpacing: "-0.01em",
+                color: "#FFFFFF",
+                textTransform: "uppercase",
+              }}
             >
               OUR
               <br />
@@ -509,133 +723,152 @@ export function PortfolioSection() {
             </motion.h2>
           </div>
 
-          {/* Filter tabs */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3, duration: 0.6 }}
             className="flex flex-wrap items-center gap-1"
-            style={{ background: "rgba(255,255,255,0.03)", padding: "4px", border: "1px solid rgba(255,255,255,0.07)" }}
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              padding: "4px",
+              border: "1px solid rgba(255,255,255,0.07)",
+            }}
           >
-            {categories.map((cat) => (
+            {categoryOptions.map((category) => (
               <button
-                key={cat}
-                aria-pressed={activeFilter === cat}
-                onClick={() => setActiveFilter(cat)}
+                key={category}
+                aria-pressed={activeFilter === category}
+                onClick={() => setActiveFilter(category)}
                 className="px-5 py-2 transition-all duration-300"
                 style={{
                   fontFamily: "'Barlow Condensed', sans-serif",
                   fontWeight: 700,
                   fontSize: "11px",
                   letterSpacing: "0.25em",
-                  color: activeFilter === cat ? "#fff" : "rgba(255,255,255,0.33)",
-                  background: activeFilter === cat ? "linear-gradient(135deg, #F97316, #FFB700)" : "transparent",
+                  color: activeFilter === category ? "#fff" : "rgba(255,255,255,0.33)",
+                  background:
+                    activeFilter === category
+                      ? "linear-gradient(135deg, #F97316, #FFB700)"
+                      : "transparent",
                   border: "none",
                   cursor: "pointer",
                 }}
               >
-                {cat}
+                {category.toUpperCase()}
               </button>
             ))}
           </motion.div>
         </div>
 
-        {/* ─── BENTO GRID ─── */}
-        <div
-          className={activeFilter === "ALL" ? "hidden xl:grid gap-3" : "hidden"}
-          style={{
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gridTemplateRows: "360px 320px 220px",
-          }}
-        >
-          {/* W1 — wide feature */}
-          <div style={{ gridColumn: "1 / 3", gridRow: "1" }}>
-            <FeatureCard work={works[0]} delay={0.05} />
+        {worksQuery.isLoading ? (
+          <div className="min-h-[520px] grid place-items-center border border-white/10 bg-white/[0.02]">
+            <span className="font-['Barlow_Condensed'] text-xs font-bold tracking-[0.35em] text-white/40">
+              LOADING PORTFOLIO
+            </span>
           </div>
-          {/* W2 — tall portrait (spans row 1-2) */}
-          <div style={{ gridColumn: "3", gridRow: "1 / 3" }}>
-            <TallCard work={works[1]} delay={0.12} />
+        ) : worksQuery.isError || filteredWorks.length === 0 ? (
+          <div className="min-h-[520px] grid place-items-center border border-white/10 bg-white/[0.02] px-8 text-center">
+            <span className="font-['Barlow_Condensed'] text-xs font-bold tracking-[0.35em] text-white/40">
+              NO PORTFOLIO WORK PUBLISHED YET
+            </span>
           </div>
-          {/* W3 — square */}
-          <div style={{ gridColumn: "1", gridRow: "2" }}>
-            <SquareCard work={works[2]} delay={0.18} />
-          </div>
-          {/* W4 — square */}
-          <div style={{ gridColumn: "2", gridRow: "2" }}>
-            <SquareCard work={works[3]} delay={0.24} />
-          </div>
-          {/* W5 — full-width banner */}
-          <div style={{ gridColumn: "1 / 4", gridRow: "3" }}>
-            <BannerCard work={works[4]} delay={0.3} />
-          </div>
-        </div>
-
-        {/* Tablet bento */}
-        <div
-          className={activeFilter === "ALL" ? "hidden md:grid xl:hidden gap-4" : "hidden"}
-          style={{
-            gridTemplateColumns: "1fr 1fr",
-            gridTemplateRows: "340px 300px 300px 240px",
-          }}
-        >
-          <div style={{ gridColumn: "1 / 3", gridRow: "1" }}>
-            <FeatureCard work={works[0]} delay={0.05} />
-          </div>
-          <div style={{ gridColumn: "1", gridRow: "2 / 4" }}>
-            <TallCard work={works[1]} delay={0.12} />
-          </div>
-          <div style={{ gridColumn: "2", gridRow: "2" }}>
-            <SquareCard work={works[2]} delay={0.18} />
-          </div>
-          <div style={{ gridColumn: "2", gridRow: "3" }}>
-            <SquareCard work={works[3]} delay={0.24} />
-          </div>
-          <div style={{ gridColumn: "1 / 3", gridRow: "4" }}>
-            <FeatureCard work={works[4]} delay={0.3} />
-          </div>
-        </div>
-
-        {/* Mobile stacked */}
-        <div className={activeFilter === "ALL" ? "flex flex-col gap-4 md:hidden" : "hidden"}>
-          <div style={{ height: "360px" }}>
-            <FeatureCard work={works[0]} delay={0.05} />
-          </div>
-          <div style={{ height: "430px" }}>
-            <TallCard work={works[1]} delay={0.12} />
-          </div>
-          <div style={{ height: "360px" }}>
-            <SquareCard work={works[2]} delay={0.18} />
-          </div>
-          <div style={{ height: "360px" }}>
-            <SquareCard work={works[3]} delay={0.24} />
-          </div>
-          <div style={{ height: "360px" }}>
-            <FeatureCard work={works[4]} delay={0.3} />
-          </div>
-        </div>
-
-        {/* Filtered results */}
-        <div className={activeFilter === "ALL" ? "hidden" : "hidden md:grid md:grid-cols-2 xl:grid-cols-3 gap-4"}>
-          {filteredWorks.map((work, index) => (
+        ) : activeFilter === "ALL" ? (
+          <>
             <div
-              key={work.id}
-              style={{ height: work.type === "tall" ? "520px" : "360px" }}
+              className="hidden xl:grid gap-3"
+              style={{
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gridTemplateRows: "360px 320px 220px",
+              }}
             >
-              {renderFilteredCard(work, index)}
+              {works[0] && (
+                <div style={{ gridColumn: "1 / 3", gridRow: "1" }}>
+                  <FeatureCard work={works[0]} delay={0.05} />
+                </div>
+              )}
+              {works[1] && (
+                <div style={{ gridColumn: "3", gridRow: "1 / 3" }}>
+                  <TallCard work={works[1]} delay={0.12} />
+                </div>
+              )}
+              {works[2] && (
+                <div style={{ gridColumn: "1", gridRow: "2" }}>
+                  <SquareCard work={works[2]} delay={0.18} />
+                </div>
+              )}
+              {works[3] && (
+                <div style={{ gridColumn: "2", gridRow: "2" }}>
+                  <SquareCard work={works[3]} delay={0.24} />
+                </div>
+              )}
+              {works[4] && (
+                <div style={{ gridColumn: "1 / 4", gridRow: "3" }}>
+                  <BannerCard work={works[4]} delay={0.3} />
+                </div>
+              )}
             </div>
-          ))}
-        </div>
 
-        <div className={activeFilter === "ALL" ? "hidden" : "flex flex-col gap-4 md:hidden"}>
-          {filteredWorks.map((work, index) => (
             <div
-              key={work.id}
-              style={{ height: work.type === "tall" ? "430px" : "360px" }}
+              className="hidden md:grid xl:hidden gap-4"
+              style={{
+                gridTemplateColumns: "1fr 1fr",
+                gridTemplateRows: "340px 300px 300px 240px",
+              }}
             >
-              {renderFilteredCard(work, index)}
+              {works[0] && (
+                <div style={{ gridColumn: "1 / 3", gridRow: "1" }}>
+                  <FeatureCard work={works[0]} delay={0.05} />
+                </div>
+              )}
+              {works[1] && (
+                <div style={{ gridColumn: "1", gridRow: "2 / 4" }}>
+                  <TallCard work={works[1]} delay={0.12} />
+                </div>
+              )}
+              {works[2] && (
+                <div style={{ gridColumn: "2", gridRow: "2" }}>
+                  <SquareCard work={works[2]} delay={0.18} />
+                </div>
+              )}
+              {works[3] && (
+                <div style={{ gridColumn: "2", gridRow: "3" }}>
+                  <SquareCard work={works[3]} delay={0.24} />
+                </div>
+              )}
+              {works[4] && (
+                <div style={{ gridColumn: "1 / 3", gridRow: "4" }}>
+                  <FeatureCard work={works[4]} delay={0.3} />
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+
+            <div className="flex flex-col gap-4 md:hidden">
+              {works.slice(0, 5).map((work, index) => (
+                <div key={work.id} style={{ height: work.type === "tall" ? "430px" : "360px" }}>
+                  {renderCard(work, index)}
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredWorks.map((work, index) => (
+                <div key={work.id} style={{ height: work.type === "tall" ? "520px" : "360px" }}>
+                  {renderCard(work, index)}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-4 md:hidden">
+              {filteredWorks.map((work, index) => (
+                <div key={work.id} style={{ height: work.type === "tall" ? "430px" : "360px" }}>
+                  {renderCard(work, index)}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );

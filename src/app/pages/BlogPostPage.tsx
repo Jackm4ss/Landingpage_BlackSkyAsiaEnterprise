@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
-import { ArrowLeft, CalendarDays, Clock3, Tag, UserRound } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock3, Link2, Send, Share2, Tag, UserRound } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
@@ -21,18 +21,38 @@ function formatDate(value: string | null) {
   return Number.isNaN(date.getTime()) ? "Published" : format(date, "MMMM dd, yyyy");
 }
 
-function renderContent(content: string) {
-  return content
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean)
-    .map((block, index) => {
-      if (block.startsWith("## ")) {
-        return <h2 key={index}>{block.replace(/^##\s+/, "")}</h2>;
-      }
+function RichArticleContent({ content }: { content: string }) {
+  const normalized = content.trim();
 
-      return <p key={index}>{block}</p>;
-    });
+  if (/<[a-z][\s\S]*>/i.test(normalized)) {
+    return <div dangerouslySetInnerHTML={{ __html: normalized }} />;
+  }
+
+  return (
+    <>
+      {normalized
+        .split(/\n{2,}/)
+        .map((block) => block.trim())
+        .filter(Boolean)
+        .map((block, index) => {
+          if (block.startsWith("## ")) {
+            return <h2 key={index}>{block.replace(/^##\s+/, "")}</h2>;
+          }
+
+          if (block.startsWith("- ")) {
+            return (
+              <ul key={index}>
+                {block.split(/\n/).map((item) => (
+                  <li key={item}>{item.replace(/^-\s+/, "")}</li>
+                ))}
+              </ul>
+            );
+          }
+
+          return <p key={index}>{block}</p>;
+        })}
+    </>
+  );
 }
 
 export function BlogPostPage() {
@@ -73,22 +93,57 @@ export function BlogPostPage() {
               News
             </Link>
 
-            <header className="blog-article-hero">
+            <header className="blog-article-hero blog-article-hero--detail">
               <div className="blog-card-kicker">
                 <span>{post.category?.name ?? "Editorial"}</span>
                 <span>{post.reading_minutes} min read</span>
               </div>
               <h1>{post.title}</h1>
               <p>{post.excerpt}</p>
-              <div className="blog-card-meta">
-                <span>
-                  <UserRound aria-hidden="true" />
-                  {post.author?.name ?? "Black Sky Editorial"}
-                </span>
-                <span>
-                  <CalendarDays aria-hidden="true" />
-                  {formatDate(post.published_at)}
-                </span>
+
+              <div className="blog-article-toolbar">
+                <div className="blog-article-author">
+                  {post.author?.photo ? (
+                    <img src={post.author.photo} alt="" aria-hidden="true" />
+                  ) : (
+                    <span>
+                      <UserRound aria-hidden="true" />
+                    </span>
+                  )}
+                  <div>
+                    <strong>{post.author?.name ?? "Black Sky Editorial"}</strong>
+                    <small>
+                      <CalendarDays aria-hidden="true" />
+                      {formatDate(post.published_at)}
+                    </small>
+                  </div>
+                </div>
+
+                <div className="blog-share-actions" aria-label="Share this news">
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Share to Facebook"
+                  >
+                    <Share2 aria-hidden="true" />
+                  </a>
+                  <a
+                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Share to LinkedIn"
+                  >
+                    <Send aria-hidden="true" />
+                  </a>
+                  <button
+                    type="button"
+                    aria-label="Copy article link"
+                    onClick={() => void navigator.clipboard?.writeText(window.location.href)}
+                  >
+                    <Link2 aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             </header>
 
@@ -110,7 +165,9 @@ export function BlogPostPage() {
                 </div>
               </aside>
 
-              <div className="blog-article-content">{renderContent(post.content)}</div>
+              <div className="blog-article-content">
+                <RichArticleContent content={post.content} />
+              </div>
             </div>
           </article>
         )}

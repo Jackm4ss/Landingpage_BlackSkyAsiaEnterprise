@@ -4,6 +4,7 @@ import { motion, useInView, useMotionValue, animate } from "motion/react";
 import { ArrowRight, MapPin, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { getPublicEvents, type PublicEvent } from "../events/events-api";
 import GradientText from "./GradientText";
+import { SaveEventButton } from "./SaveEventButton";
 
 const FALLBACK_EVENT_IMAGE =
   "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80";
@@ -12,7 +13,7 @@ const CARD_WIDTH = 460;
 const GAP = 20;
 const DEFAULT_ACCENT = "#A855F7";
 
-interface EventSlide {
+export interface EventSlide {
   id: number;
   title: string;
   slug: string;
@@ -61,7 +62,7 @@ function getContrastText(hex: string) {
   return luminance > 0.42 ? "#050505" : "#FFFFFF";
 }
 
-function mapPublicEvent(event: PublicEvent): EventSlide {
+export function mapPublicEventToSlide(event: PublicEvent): EventSlide {
   const accentColor = normalizeHex(event.accent_color);
 
   return {
@@ -138,13 +139,20 @@ function EventsSectionState({ title, body }: { title: string; body: string }) {
   );
 }
 
-function EventSlideCard({ event, isActive }: { event: EventSlide; isActive: boolean }) {
+export function EventSlideCard({
+  event,
+  isActive,
+  fluid = false,
+}: {
+  event: EventSlide;
+  isActive: boolean;
+  fluid?: boolean;
+}) {
   const [hovered, setHovered] = useState(false);
   const ctaTextColor = getContrastText(event.accentColor);
-  const detailHref = `/discover?event=${encodeURIComponent(event.slug)}`;
-  const href = event.soldOut ? detailHref : event.vendorUrl ?? detailHref;
-  const ctaLabel = event.soldOut ? "VIEW DETAILS" : event.vendorUrl ? "GET TICKETS" : "VIEW DETAILS";
-  const opensVendor = !event.soldOut && Boolean(event.vendorUrl);
+  const detailHref = `/events/${encodeURIComponent(event.slug)}`;
+  const ctaLabel = "VIEW DETAILS";
+  const href = detailHref;
 
   return (
     <motion.div
@@ -154,7 +162,7 @@ function EventSlideCard({ event, isActive }: { event: EventSlide; isActive: bool
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className="relative overflow-hidden cursor-grab active:cursor-grabbing flex-shrink-0"
       style={{
-        width: CARD_WIDTH,
+        width: fluid ? "100%" : CARD_WIDTH,
         background: "#0A0A0A",
         border: `1px solid ${isActive ? event.accentColor + "50" : "rgba(255,255,255,0.05)"}`,
         transition: "border-color 0.4s",
@@ -309,13 +317,19 @@ function EventSlideCard({ event, isActive }: { event: EventSlide; isActive: bool
         </div>
 
         <div
-          className="flex items-center justify-between pt-5"
+          className="flex items-center justify-between gap-3 pt-5"
           style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}
         >
+          <SaveEventButton
+            eventId={event.id}
+            compact
+            idleLabel="Save"
+            savedLabel="Saved"
+            loginLabel="Save"
+            className="event-slide-save-button"
+          />
           <motion.a
             href={href}
-            target={opensVendor ? "_blank" : undefined}
-            rel={opensVendor ? "noreferrer" : undefined}
             whileHover={{
               backgroundColor: event.accentColor,
               color: ctaTextColor,
@@ -385,7 +399,7 @@ export function EventsSection() {
     staleTime: 60_000,
   });
 
-  const events = useMemo(() => (data?.data ?? []).map(mapPublicEvent), [data]);
+  const events = useMemo(() => (data?.data ?? []).map(mapPublicEventToSlide), [data]);
   const TOTAL = events.length;
 
   useEffect(() => {

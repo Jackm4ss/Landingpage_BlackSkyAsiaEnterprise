@@ -13,8 +13,10 @@ import {
   Ticket,
   X,
 } from "lucide-react";
+import { FilterDropdown } from "../components/FilterDropdown";
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
+import { SaveEventButton } from "../components/SaveEventButton";
 import {
   getPublicEvents,
   type PublicEvent,
@@ -61,20 +63,12 @@ function formatDay(value: string) {
   };
 }
 
-function eventCta(event: PublicEvent) {
-  if (event.status === "sold_out") {
-    return "Sold Out";
-  }
-
-  return event.vendor_url ? "Get Tickets" : "View More";
+function eventCta() {
+  return "View Details";
 }
 
 function eventHref(event: PublicEvent) {
-  if (event.vendor_url) {
-    return event.vendor_url;
-  }
-
-  return `/discover?event=${encodeURIComponent(event.slug)}`;
+  return `/events/${encodeURIComponent(event.slug)}`;
 }
 
 function groupEventsByMonth(events: PublicEvent[]) {
@@ -139,9 +133,24 @@ function HeroShowcase({ events }: { events: PublicEvent[] }) {
 
         <div className="discover-hero-panel">
           <img src={image} alt={`${activeEvent.title} artwork`} />
-          <div>
-            <span>{activeEvent.genre}</span>
-            <strong>{eventCta(activeEvent)}</strong>
+          <div className="discover-hero-panel__footer">
+            <div className="discover-hero-panel__meta-line">
+              <span>{activeEvent.genre}</span>
+              <strong>{activeEvent.status === "sold_out" ? "Sold Out" : "Featured"}</strong>
+            </div>
+            <div className="discover-hero-panel__actions">
+              <SaveEventButton
+                eventId={activeEvent.id}
+                compact
+                idleLabel="Save"
+                savedLabel="Saved"
+                loginLabel="Save"
+              />
+              <a href={eventHref(activeEvent)}>
+                <span>{eventCta()}</span>
+                <ArrowUpRight aria-hidden="true" />
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -186,7 +195,6 @@ function HeroShowcase({ events }: { events: PublicEvent[] }) {
 function DiscoverEventRow({ event }: { event: PublicEvent }) {
   const day = formatDay(event.start_date);
   const image = event.image_url ?? FALLBACK_IMAGE;
-  const external = Boolean(event.vendor_url);
 
   return (
     <article className="discover-event-row">
@@ -219,14 +227,19 @@ function DiscoverEventRow({ event }: { event: PublicEvent }) {
       <div className="discover-event-side">
         <span className="discover-ticket-label">
           <Ticket aria-hidden="true" />
-          {event.status === "sold_out" ? "Waitlist only" : external ? "Vendor ticketing" : "Details soon"}
+          Event details
         </span>
+        <SaveEventButton
+          eventId={event.id}
+          compact
+          idleLabel="Save"
+          savedLabel="Saved"
+          loginLabel="Save"
+        />
         <a
           href={eventHref(event)}
-          target={external ? "_blank" : undefined}
-          rel={external ? "noreferrer" : undefined}
         >
-          <span>{eventCta(event)}</span>
+          <span>{eventCta()}</span>
           <ArrowUpRight aria-hidden="true" />
         </a>
       </div>
@@ -281,6 +294,26 @@ export function DiscoverPage() {
   const pages = eventsQuery.data?.pages ?? [];
   const events = pages.flatMap((page) => page.data);
   const filterOptions = pages[0]?.meta.filters ?? { cities: [], genres: [] };
+  const cityOptions = useMemo(
+    () => [
+      { value: "", label: "All Cities" },
+      ...filterOptions.cities.map((cityOption) => ({
+        value: cityOption,
+        label: cityOption,
+      })),
+    ],
+    [filterOptions.cities],
+  );
+  const genreOptions = useMemo(
+    () => [
+      { value: "", label: "All Genres" },
+      ...filterOptions.genres.map((genreOption) => ({
+        value: genreOption,
+        label: genreOption,
+      })),
+    ],
+    [filterOptions.genres],
+  );
   const groupedEvents = useMemo(() => groupEventsByMonth(events), [events]);
   const hasActiveFilters = Boolean(search || city || genre || dateFrom || dateTo || availability !== "all");
 
@@ -346,31 +379,21 @@ export function DiscoverPage() {
               />
             </label>
 
-            <label>
-              <MapPin aria-hidden="true" />
-              <span className="sr-only">City</span>
-              <select value={city} onChange={(event) => setCity(event.target.value)}>
-                <option value="">All Cities</option>
-                {filterOptions.cities.map((cityOption) => (
-                  <option key={cityOption} value={cityOption}>
-                    {cityOption}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <FilterDropdown
+              ariaLabel="City"
+              value={city}
+              options={cityOptions}
+              onChange={setCity}
+              icon={<MapPin aria-hidden="true" />}
+            />
 
-            <label>
-              <Music2 aria-hidden="true" />
-              <span className="sr-only">Event genre</span>
-              <select value={genre} onChange={(event) => setGenre(event.target.value)}>
-                <option value="">All Genres</option>
-                {filterOptions.genres.map((genreOption) => (
-                  <option key={genreOption} value={genreOption}>
-                    {genreOption}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <FilterDropdown
+              ariaLabel="Event genre"
+              value={genre}
+              options={genreOptions}
+              onChange={setGenre}
+              icon={<Music2 aria-hidden="true" />}
+            />
 
             <label>
               <CalendarDays aria-hidden="true" />
@@ -384,18 +407,17 @@ export function DiscoverPage() {
               <input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
             </label>
 
-            <label>
-              <SlidersHorizontal aria-hidden="true" />
-              <span className="sr-only">Availability</span>
-              <select
-                value={availability}
-                onChange={(event) => setAvailability(event.target.value as Availability)}
-              >
-                <option value="all">All Status</option>
-                <option value="available">Available</option>
-                <option value="sold_out">Sold Out</option>
-              </select>
-            </label>
+            <FilterDropdown
+              ariaLabel="Availability"
+              value={availability}
+              options={[
+                { value: "all", label: "All Status" },
+                { value: "available", label: "Available" },
+                { value: "sold_out", label: "Sold Out" },
+              ]}
+              onChange={(nextValue) => setAvailability(nextValue as Availability)}
+              icon={<SlidersHorizontal aria-hidden="true" />}
+            />
 
             <button type="button" onClick={clearFilters} disabled={!hasActiveFilters}>
               <X aria-hidden="true" />

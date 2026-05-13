@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { useCurrentUser } from "../auth/auth-queries";
 import LogoLoop, { type LogoItem } from "./LogoLoop";
 import heroImage from "../../assets/hero-concert-bg.png";
 
@@ -57,13 +58,10 @@ const partnerLogos: LogoItem[] = [
 
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { data: user } = useCurrentUser();
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 800], [0, 200]);
   const opacity = useTransform(scrollY, [0, 500], [1, 0]);
-
-  const handleScroll = () => {
-    document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" });
-  };
 
   return (
     <section
@@ -214,11 +212,13 @@ export function HeroSection() {
           </p>
 
           <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
-            <button
-              onClick={handleScroll}
+            <a
+              href="/discover"
               className="flex items-center gap-2 sm:gap-3 px-5 py-3 sm:px-8 sm:py-4 transition-all duration-300 hover:gap-4 sm:hover:gap-5"
               style={{
+                alignItems: "center",
                 background: "#0284C7",
+                display: "flex",
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontWeight: 700,
                 fontSize: "clamp(10.5px, 2vw, 13px)",
@@ -227,52 +227,59 @@ export function HeroSection() {
                 border: "none",
                 cursor: "pointer",
                 clipPath: "polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)",
+                textDecoration: "none",
               }}
             >
               EXPLORE MORE
               <ArrowRight size={16} />
-            </button>
+            </a>
 
-            <div
-              className="relative hero-ticket-border p-[1px]"
-              style={{
-                clipPath: "polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)",
-              }}
-            >
-              <span
-                className="absolute left-0 top-2 bottom-2 z-20 pointer-events-none hero-ticket-side"
-                style={{ width: 2, background: "#0EA5E9" }}
-              />
-              <span
-                className="absolute right-0 top-2 bottom-2 z-20 pointer-events-none hero-ticket-side"
-                style={{ width: 2, background: "#0EA5E9" }}
-              />
-              <button
-                className="relative z-10 flex items-center gap-2 sm:gap-3 px-5 py-3 sm:px-8 sm:py-4 transition-all duration-300"
+            {!user ? (
+              <div
+                className="relative hero-ticket-border p-[1px]"
                 style={{
-                  background: "rgba(3,7,12,0.72)",
-                  fontFamily: "'Barlow Condensed', sans-serif",
-                  fontWeight: 700,
-                  fontSize: "clamp(10.5px, 2vw, 13px)",
-                  letterSpacing: "0.18em",
-                  color: "rgba(255,255,255,0.82)",
-                  border: "none",
-                  cursor: "pointer",
                   clipPath: "polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)",
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(14,165,233,0.18)";
-                  e.currentTarget.style.color = "#fff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(3,7,12,0.72)";
-                  e.currentTarget.style.color = "rgba(255,255,255,0.82)";
-                }}
               >
-                GET TICKET
-                <ArrowUpRight size={15} />
-              </button>
-            </div>
+                <span
+                  className="absolute left-0 top-2 bottom-2 z-20 pointer-events-none hero-ticket-side"
+                  style={{ width: 2, background: "#0EA5E9" }}
+                />
+                <span
+                  className="absolute right-0 top-2 bottom-2 z-20 pointer-events-none hero-ticket-side"
+                  style={{ width: 2, background: "#0EA5E9" }}
+                />
+                <a
+                  href="/register"
+                  className="relative z-10 flex items-center gap-2 sm:gap-3 px-5 py-3 sm:px-8 sm:py-4 transition-all duration-300"
+                  style={{
+                    alignItems: "center",
+                    background: "rgba(3,7,12,0.72)",
+                    display: "flex",
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontWeight: 700,
+                    fontSize: "clamp(10.5px, 2vw, 13px)",
+                    letterSpacing: "0.18em",
+                    color: "rgba(255,255,255,0.82)",
+                    border: "none",
+                    cursor: "pointer",
+                    clipPath: "polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%)",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(14,165,233,0.18)";
+                    e.currentTarget.style.color = "#fff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(3,7,12,0.72)";
+                    e.currentTarget.style.color = "rgba(255,255,255,0.82)";
+                  }}
+                >
+                  GET TICKET
+                  <ArrowUpRight size={15} />
+                </a>
+              </div>
+            ) : null}
           </div>
         </motion.div>
       </motion.div>
