@@ -1,67 +1,60 @@
-import { useCallback, useEffect, useState } from "react";
-import { Navbar } from "./components/Navbar";
-import { HeroSection } from "./components/HeroSection";
-import { AboutSection } from "./components/AboutSection";
-import { EventsSection } from "./components/EventsSection";
-import { PortfolioSection } from "./components/PortfolioSection";
-import { StatsSection } from "./components/StatsSection";
-import { NewsSection } from "./components/NewsSection";
-import { Footer } from "./components/Footer";
-import { LoginPage } from "./pages/LoginPage";
-import { RegisterPage } from "./pages/RegisterPage";
-import { LoginSuccessPage } from "./pages/LoginSuccessPage";
-import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
-import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { lazy, Suspense } from "react";
+import { Navigate, Route, Routes } from "react-router";
+import { RequireAuth } from "./routes/RequireAuth";
+import { ScrollToTop } from "./routes/ScrollToTop";
 
-const getPathname = () => window.location.pathname.replace(/\/$/, "") || "/";
+const LandingPage = lazy(() =>
+  import("./pages/LandingPage").then((module) => ({ default: module.LandingPage })),
+);
+const DiscoverPage = lazy(() =>
+  import("./pages/DiscoverPage").then((module) => ({ default: module.DiscoverPage })),
+);
+const BlogPage = lazy(() =>
+  import("./pages/BlogPage").then((module) => ({ default: module.BlogPage })),
+);
+const BlogPostPage = lazy(() =>
+  import("./pages/BlogPostPage").then((module) => ({ default: module.BlogPostPage })),
+);
+const LoginPage = lazy(() =>
+  import("./pages/LoginPage").then((module) => ({ default: module.LoginPage })),
+);
+const RegisterPage = lazy(() =>
+  import("./pages/RegisterPage").then((module) => ({ default: module.RegisterPage })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import("./pages/ForgotPasswordPage").then((module) => ({
+    default: module.ForgotPasswordPage,
+  })),
+);
+const ResetPasswordPage = lazy(() =>
+  import("./pages/ResetPasswordPage").then((module) => ({
+    default: module.ResetPasswordPage,
+  })),
+);
+const EmailVerificationPage = lazy(() =>
+  import("./pages/EmailVerificationPage").then((module) => ({
+    default: module.EmailVerificationPage,
+  })),
+);
+const LoginSuccessPage = lazy(() =>
+  import("./pages/LoginSuccessPage").then((module) => ({
+    default: module.LoginSuccessPage,
+  })),
+);
 
-function LandingPage() {
+function RouteFallback() {
   return (
-    <>
-      <Navbar />
-      <HeroSection />
-      <AboutSection />
-      <EventsSection />
-      <PortfolioSection />
-      <StatsSection />
-      <NewsSection />
-      <Footer />
-    </>
+    <div
+      aria-hidden="true"
+      style={{
+        minHeight: "100vh",
+        background: "#050505",
+      }}
+    />
   );
 }
 
 export default function App() {
-  const [pathname, setPathname] = useState(getPathname);
-
-  const navigate = useCallback((path: string) => {
-    window.history.pushState(null, "", path);
-    setPathname(getPathname());
-    window.scrollTo({ top: 0, behavior: "auto" });
-  }, []);
-
-  useEffect(() => {
-    const handlePopState = () => setPathname(getPathname());
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
-
-  const renderPage = () => {
-    if (pathname === "/login") return <LoginPage onNavigate={navigate} />;
-    if (pathname === "/register") return <RegisterPage onNavigate={navigate} />;
-    if (pathname === "/forgot-password") {
-      return <ForgotPasswordPage onNavigate={navigate} />;
-    }
-    if (pathname === "/reset-password") {
-      return <ResetPasswordPage onNavigate={navigate} />;
-    }
-    if (pathname === "/login/success") {
-      return <LoginSuccessPage onNavigate={navigate} />;
-    }
-
-    return <LandingPage />;
-  };
-
   return (
     <div
       style={{
@@ -96,7 +89,36 @@ export default function App() {
         }
       `}</style>
 
-      {renderPage()}
+      <ScrollToTop />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/discover" element={<DiscoverPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/email-verification"
+            element={
+              <RequireAuth>
+                <EmailVerificationPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/login/success"
+            element={
+              <RequireAuth>
+                <LoginSuccessPage />
+              </RequireAuth>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </div>
   );
 }

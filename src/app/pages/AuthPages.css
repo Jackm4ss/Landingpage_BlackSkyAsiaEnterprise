@@ -169,6 +169,13 @@
   line-height: 1.35;
 }
 
+.auth-form__field-error {
+  margin: 2px 0 0;
+  color: #fb7185;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .auth-form__row {
   display: flex;
   align-items: center;
@@ -748,6 +755,59 @@
   font-size: 18px;
   font-weight: 400;
   line-height: 28px;
+}
+
+.auth-success-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  background:
+    linear-gradient(rgba(14, 165, 233, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.08) 1px, transparent 1px),
+    radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.18), transparent 34%),
+    #050505;
+  background-size: 56px 56px, 56px 56px, auto, auto;
+  color: #ffffff;
+  font-family: "Barlow", sans-serif;
+  padding: 24px;
+}
+
+.auth-success-page__card {
+  display: grid;
+  width: min(100%, 440px);
+  justify-items: center;
+  gap: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(5, 5, 5, 0.78);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+  padding: 44px 28px;
+  text-align: center;
+}
+
+.auth-success-page__card img {
+  width: 68px;
+  height: auto;
+}
+
+.auth-success-page__card p {
+  margin: 0;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: clamp(30px, 6vw, 44px);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.auth-success-page__card a {
+  color: #67e8f9;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  text-transform: uppercase;
 }
 
 @media (max-width: 1180px) {

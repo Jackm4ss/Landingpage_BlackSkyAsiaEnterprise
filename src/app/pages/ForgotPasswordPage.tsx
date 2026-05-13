@@ -1,51 +1,42 @@
-import { type FormEvent, type MouseEvent, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link } from "react-router";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { requestPasswordReset } from "../auth/session";
+import { getAuthErrorMessage } from "../auth/auth-api";
+import { useForgotPasswordMutation } from "../auth/auth-queries";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordFormValues,
+} from "../auth/auth-schemas";
 import logo from "../../assets/LOGO.png";
 import heroImage from "../../assets/hero-concert-bg.png";
 import { AuthStudioVisualPanel } from "./AuthStudioVisualPanel";
 import "./AuthPages.css";
 
-type ForgotPasswordPageProps = {
-  onNavigate: (path: string) => void;
-};
-
-export function ForgotPasswordPage({ onNavigate }: ForgotPasswordPageProps) {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+export function ForgotPasswordPage() {
+  const forgotPasswordMutation = useForgotPasswordMutation();
   const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const form = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError("");
+  const onSubmit = form.handleSubmit(async (values) => {
+    setSubmitError("");
     setMessage("");
-    setIsSubmitting(true);
 
     try {
-      const normalizedEmail = await requestPasswordReset({ email });
-      setMessage(`Reset instructions sent to ${normalizedEmail}.`);
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Gagal mengirim reset link.",
-      );
-    } finally {
-      setIsSubmitting(false);
+      const response = await forgotPasswordMutation.mutateAsync(values);
+      setMessage(response.message);
+    } catch (error) {
+      setSubmitError(getAuthErrorMessage(error, "Gagal mengirim reset link."));
     }
-  };
-
-  const handleLoginLink = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    onNavigate("/login");
-  };
-
-  const handleResetLink = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    onNavigate("/reset-password");
-  };
+  });
 
   return (
     <main className="login-page">
@@ -60,7 +51,7 @@ export function ForgotPasswordPage({ onNavigate }: ForgotPasswordPageProps) {
             <p>No worries, we'll send you reset instructions.</p>
           </div>
 
-          <form className="auth-form login-page__form" onSubmit={handleSubmit} noValidate>
+          <form className="auth-form login-page__form" onSubmit={onSubmit} noValidate>
             <div className="auth-form__field">
               <Label className="auth-form__label" htmlFor="forgot-email">
                 Email address*
@@ -69,43 +60,44 @@ export function ForgotPasswordPage({ onNavigate }: ForgotPasswordPageProps) {
                 className="auth-form__input"
                 id="forgot-email"
                 type="email"
-                value={email}
                 autoComplete="email"
                 placeholder="Enter your email address"
-                onChange={(event) => setEmail(event.target.value)}
+                aria-invalid={Boolean(form.formState.errors.email)}
+                {...form.register("email")}
               />
+              {form.formState.errors.email ? (
+                <p className="auth-form__field-error">
+                  {form.formState.errors.email.message}
+                </p>
+              ) : null}
             </div>
 
             <p
-              className={error ? "auth-form__alert" : "auth-form__success"}
-              role={error ? "alert" : "status"}
+              className={submitError ? "auth-form__alert" : "auth-form__success"}
+              role={submitError ? "alert" : "status"}
             >
-              {error || message}
+              {submitError || message}
               {message ? (
                 <>
                   {" "}
-                  <a
-                    className="auth-form__link"
-                    href="/reset-password"
-                    onClick={handleResetLink}
-                  >
+                  <Link className="auth-form__link" to="/reset-password">
                     Open reset form
-                  </a>
+                  </Link>
                 </>
               ) : null}
             </p>
 
-            <button className="auth-form__button" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Sending" : "Send Reset Link"}
+            <button
+              className="auth-form__button"
+              type="submit"
+              disabled={forgotPasswordMutation.isPending}
+            >
+              {forgotPasswordMutation.isPending ? "Sending" : "Send Reset Link"}
             </button>
 
-            <a
-              className="auth-form__button auth-form__button--ghost"
-              href="/login"
-              onClick={handleLoginLink}
-            >
+            <Link className="auth-form__button auth-form__button--ghost" to="/login">
               Back to login
-            </a>
+            </Link>
           </form>
         </div>
       </section>

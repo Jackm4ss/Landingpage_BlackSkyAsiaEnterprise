@@ -1,50 +1,85 @@
-import { type CSSProperties, type FormEvent, type MouseEvent, useState } from "react";
+import { type CSSProperties, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "../components/ui/checkbox";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { createLoginSession } from "../auth/session";
+import { getAuthErrorMessage } from "../auth/auth-api";
+import { useLoginMutation, useLogoutMutation } from "../auth/auth-queries";
+import { loginSchema, type LoginFormValues } from "../auth/auth-schemas";
 import logo from "../../assets/LOGO.png";
 import heroImage from "../../assets/hero-concert-bg.png";
 import { AuthInfoCard } from "./AuthStudioVisualPanel";
 import "./AuthPages.css";
 
 type LoginPageProps = {
-  onNavigate: (path: string) => void;
+  variant?: "user" | "admin";
 };
 
-export function LoginPage({ onNavigate }: LoginPageProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const pageCopy = {
+  user: {
+    title: "Welcome Back",
+    description: "Welcome back! Enter your email and password to continue.",
+    buttonIdle: "Sign in to Black Sky",
+    buttonPending: "Signing in",
+    visualTitle: "Welcome back! Please sign in to your Black Sky account",
+    visualDescription:
+      "Thank you for joining our live entertainment network. Activate your access, track upcoming shows, and keep your ticket journey close.",
+    cardTitle: "Please enter your login details",
+    cardDescription:
+      "Stay connected with Black Sky Enterprise. Subscribe now for the latest concert updates and news.",
+  },
+  admin: {
+    title: "Admin Login",
+    description: "Masuk menggunakan akun admin Black Sky Enterprise.",
+    buttonIdle: "Sign in to Admin",
+    buttonPending: "Checking access",
+    visualTitle: "Admin control room for Black Sky operations",
+    visualDescription:
+      "Akses internal untuk mengelola event, konten, vendor, dan monitoring operasional Black Sky Enterprise.",
+    cardTitle: "Authorized personnel only",
+    cardDescription:
+      "Gunakan kredensial admin yang aktif. Akun user biasa tidak dapat masuk ke area admin.",
+  },
+} as const;
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError("");
-    setIsSubmitting(true);
+export function LoginPage({ variant = "user" }: LoginPageProps) {
+  const navigate = useNavigate();
+  const loginMutation = useLoginMutation();
+  const logoutMutation = useLogoutMutation();
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const isAdminLogin = variant === "admin";
+  const copy = pageCopy[variant];
+  const isSubmitting = loginMutation.isPending || logoutMutation.isPending;
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      remember: false,
+    },
+  });
+
+  const onSubmit = form.handleSubmit(async (values) => {
+    setSubmitError("");
 
     try {
-      await createLoginSession({ email, password, remember });
-      onNavigate("/login/success");
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Login gagal.");
-    } finally {
-      setIsSubmitting(false);
+      const user = await loginMutation.mutateAsync(values);
+
+      if (isAdminLogin && !user.roles?.includes("admin")) {
+        await logoutMutation.mutateAsync();
+        setSubmitError("Akun ini tidak memiliki akses admin.");
+        return;
+      }
+
+      navigate(isAdminLogin ? "/admin" : "/login/success");
+    } catch (error) {
+      setSubmitError(getAuthErrorMessage(error, "Login gagal."));
     }
-  };
-
-  const handleRegisterLink = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    onNavigate("/register");
-  };
-
-  const handleForgotPasswordLink = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    onNavigate("/forgot-password");
-  };
+  });
 
   const PasswordIcon = showPassword ? EyeOff : Eye;
 
@@ -57,11 +92,11 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
           </a>
 
           <div className="login-page__intro">
-            <h1>Welcome Back</h1>
-            <p>Welcome back! Enter your email and password to continue.</p>
+            <h1>{copy.title}</h1>
+            <p>{copy.description}</p>
           </div>
 
-          <form className="auth-form login-page__form" onSubmit={handleSubmit} noValidate>
+          <form className="auth-form login-page__form" onSubmit={onSubmit} noValidate>
             <div className="auth-form__field">
               <Label className="auth-form__label" htmlFor="login-email">
                 Email address*
@@ -70,11 +105,16 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
                 className="auth-form__input"
                 id="login-email"
                 type="email"
-                value={email}
                 autoComplete="email"
                 placeholder="Enter your email address"
-                onChange={(event) => setEmail(event.target.value)}
+                aria-invalid={Boolean(form.formState.errors.email)}
+                {...form.register("email")}
               />
+              {form.formState.errors.email ? (
+                <p className="auth-form__field-error">
+                  {form.formState.errors.email.message}
+                </p>
+              ) : null}
             </div>
 
             <div className="auth-form__field">
@@ -86,10 +126,10 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
                   className="auth-form__input"
                   id="login-password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
                   autoComplete="current-password"
                   placeholder="Password"
-                  onChange={(event) => setPassword(event.target.value)}
+                  aria-invalid={Boolean(form.formState.errors.password)}
+                  {...form.register("password")}
                 />
                 <button
                   className="auth-form__icon-button"
@@ -100,41 +140,55 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
                   <PasswordIcon size={17} aria-hidden="true" />
                 </button>
               </div>
+              {form.formState.errors.password ? (
+                <p className="auth-form__field-error">
+                  {form.formState.errors.password.message}
+                </p>
+              ) : null}
             </div>
 
             <div className="auth-form__row">
               <Label className="auth-form__checkline" htmlFor="login-remember">
-                <Checkbox
-                  className="auth-form__checkbox"
-                  id="login-remember"
-                  checked={remember}
-                  onCheckedChange={(checked) => setRemember(checked === true)}
+                <Controller
+                  control={form.control}
+                  name="remember"
+                  render={({ field }) => (
+                    <Checkbox
+                      className="auth-form__checkbox"
+                      id="login-remember"
+                      checked={field.value}
+                      onCheckedChange={(checked) => field.onChange(checked === true)}
+                    />
+                  )}
                 />
                 Remember Me
               </Label>
-              <a
-                className="auth-form__link"
-                href="/forgot-password"
-                onClick={handleForgotPasswordLink}
-              >
+              <Link className="auth-form__link" to="/forgot-password">
                 Forgot Password?
-              </a>
+              </Link>
             </div>
 
             <p className="auth-form__alert" role="alert">
-              {error}
+              {submitError}
             </p>
 
-            <button className="auth-form__button" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Signing in" : "Sign in to Black Sky"}
+            <button
+              className="auth-form__button"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? copy.buttonPending : copy.buttonIdle}
             </button>
           </form>
 
           <p className="auth-page__switch login-page__switch">
-            New on our platform?{" "}
-            <a href="/register" onClick={handleRegisterLink}>
-              Create an account
-            </a>
+            {isAdminLogin ? (
+              <Link to="/">Back to public site</Link>
+            ) : (
+              <>
+                New on our platform? <Link to="/register">Create an account</Link>
+              </>
+            )}
           </p>
         </div>
       </section>
@@ -146,16 +200,13 @@ export function LoginPage({ onNavigate }: LoginPageProps) {
       >
         <div className="login-page__visual-panel">
           <div className="login-page__visual-copy">
-            <h2>Welcome back! Please sign in to your Black Sky account</h2>
-            <p>
-              Thank you for joining our live entertainment network. Activate your access,
-              track upcoming shows, and keep your ticket journey close.
-            </p>
+            <h2>{copy.visualTitle}</h2>
+            <p>{copy.visualDescription}</p>
           </div>
 
           <AuthInfoCard
-            title="Please enter your login details"
-            description="Stay connected with Black Sky Enterprise. Subscribe now for the latest concert updates and news."
+            title={copy.cardTitle}
+            description={copy.cardDescription}
           />
         </div>
       </section>

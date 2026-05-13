@@ -1,0 +1,697 @@
+.discover-page {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(3, 2, 19, 0.88), rgba(5, 5, 5, 1) 44%),
+    #050505;
+  color: #fff;
+}
+
+.discover-hero {
+  min-height: clamp(560px, 78vh, 760px);
+  position: relative;
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+  padding: clamp(118px, 16vw, 180px) clamp(20px, 5vw, 72px) clamp(44px, 8vw, 86px);
+}
+
+.discover-hero-empty {
+  background:
+    linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(14, 165, 233, 0.1)),
+    #050505;
+}
+
+.discover-hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.72;
+  transform: scale(1.02);
+}
+
+.discover-hero-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(5, 5, 5, 0.96) 0%, rgba(5, 5, 5, 0.58) 42%, rgba(5, 5, 5, 0.26) 100%),
+    linear-gradient(180deg, rgba(5, 5, 5, 0.18) 0%, rgba(5, 5, 5, 0.94) 100%);
+}
+
+.discover-hero-inner {
+  width: min(100%, 1500px);
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: clamp(28px, 5vw, 76px);
+  align-items: end;
+}
+
+.discover-hero-copy {
+  max-width: 880px;
+}
+
+.discover-hero-copy > span,
+.discover-heading-row > div > span,
+.discover-browsing > span {
+  display: inline-flex;
+  align-items: center;
+  color: #0ea5e9;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.discover-hero-copy h1 {
+  margin: 16px 0 18px;
+  max-width: 980px;
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: clamp(4.1rem, 12vw, 10.5rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.82;
+  text-transform: uppercase;
+}
+
+.discover-hero-copy p {
+  max-width: 620px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-family: "Barlow", sans-serif;
+  font-size: clamp(1rem, 1.8vw, 1.18rem);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.discover-hero-meta,
+.discover-event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin-top: 24px;
+}
+
+.discover-hero-meta span,
+.discover-event-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.discover-hero-meta svg,
+.discover-event-meta svg {
+  width: 15px;
+  height: 15px;
+  color: #a855f7;
+}
+
+.discover-hero-panel {
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(5, 5, 5, 0.6);
+  padding: 12px;
+  backdrop-filter: blur(18px);
+}
+
+.discover-hero-panel img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.discover-hero-panel div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.discover-hero-panel span,
+.discover-event-kicker span,
+.discover-ticket-label {
+  color: rgba(255, 255, 255, 0.62);
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.discover-hero-panel strong {
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.discover-hero-controls {
+  width: min(100%, 1500px);
+  margin: 28px auto 0;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.discover-hero-controls > button,
+.discover-hero-controls div button {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+}
+
+.discover-hero-controls > button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+}
+
+.discover-hero-controls > button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.discover-hero-controls div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.discover-hero-controls div button {
+  width: 24px;
+  height: 6px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.discover-hero-controls div button[aria-current="true"] {
+  width: 44px;
+  background: linear-gradient(90deg, #a855f7, #0ea5e9);
+}
+
+.discover-list-section {
+  width: min(100%, 1500px);
+  margin: 0 auto;
+  padding: clamp(38px, 7vw, 86px) clamp(20px, 5vw, 72px) clamp(64px, 9vw, 118px);
+}
+
+.discover-browsing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 36px;
+}
+
+.discover-browsing div {
+  display: inline-flex;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 6px;
+}
+
+.discover-browsing button {
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.52);
+  cursor: pointer;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  padding: 0 18px;
+  text-transform: uppercase;
+}
+
+.discover-browsing button[aria-pressed="true"] {
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.discover-heading-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 28px;
+  align-items: end;
+  margin-bottom: 28px;
+}
+
+.discover-heading-row h2 {
+  margin: 8px 0 0;
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: clamp(2.5rem, 7vw, 6.4rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.discover-heading-row h2 strong {
+  display: block;
+  color: #a855f7;
+  font: inherit;
+}
+
+.discover-heading-row p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.54);
+  font-family: "Barlow", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.65;
+}
+
+.discover-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(5, minmax(140px, 1fr)) auto;
+  gap: 10px;
+  align-items: stretch;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px 0;
+  margin-bottom: 32px;
+}
+
+.discover-filter-bar label,
+.discover-filter-bar button {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.72);
+  padding: 0 14px;
+}
+
+.discover-filter-bar label > svg,
+.discover-filter-bar button > svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: #0ea5e9;
+}
+
+.discover-filter-bar label > span:not(.sr-only) {
+  color: rgba(255, 255, 255, 0.44);
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.discover-filter-bar input,
+.discover-filter-bar select {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.discover-filter-bar input::placeholder {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.discover-filter-bar select option {
+  background: #050505;
+  color: #fff;
+}
+
+.discover-filter-bar input[type="date"] {
+  color-scheme: dark;
+}
+
+.discover-filter-bar button {
+  cursor: pointer;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.discover-filter-bar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.discover-results {
+  display: grid;
+  gap: 34px;
+}
+
+.discover-month-group {
+  display: grid;
+  gap: 12px;
+}
+
+.discover-month-group > h2 {
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.54);
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  padding-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.discover-month-group > div {
+  display: grid;
+  gap: 10px;
+}
+
+.discover-event-row {
+  display: grid;
+  grid-template-columns: 72px minmax(180px, 290px) minmax(0, 1fr) minmax(210px, 250px);
+  gap: 18px;
+  align-items: stretch;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 14px 18px;
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.discover-event-row:hover {
+  border-color: rgba(14, 165, 233, 0.36);
+  background: rgba(255, 255, 255, 0.055);
+  transform: translateY(-1px);
+}
+
+.discover-date-badge {
+  min-height: 112px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  padding-right: 14px;
+}
+
+.discover-date-badge span {
+  color: #0ea5e9;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.discover-date-badge strong {
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 0.9;
+}
+
+.discover-event-row > img {
+  width: 100%;
+  height: 154px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.discover-event-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.discover-event-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.discover-event-kicker span {
+  color: #0ea5e9;
+}
+
+.discover-event-kicker span + span {
+  color: rgba(255, 255, 255, 0.44);
+}
+
+.discover-event-main h3 {
+  margin: 0;
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: clamp(1.6rem, 2.6vw, 2.45rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.discover-event-main p {
+  max-width: 680px;
+  margin: 9px 0 0;
+  color: rgba(255, 255, 255, 0.52);
+  font-family: "Barlow", sans-serif;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.discover-event-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+}
+
+.discover-ticket-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-align: right;
+}
+
+.discover-ticket-label svg {
+  width: 15px;
+  height: 15px;
+  color: #a855f7;
+}
+
+.discover-event-side a,
+.discover-load-more button {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(14, 165, 233, 0.7);
+  background: rgba(14, 165, 233, 0.08);
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  padding: 0 18px;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.discover-event-side a:hover,
+.discover-load-more button:hover {
+  background: #0ea5e9;
+}
+
+.discover-event-side a svg {
+  width: 16px;
+  height: 16px;
+}
+
+.discover-empty {
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 36px;
+  text-align: center;
+}
+
+.discover-empty svg {
+  width: 38px;
+  height: 38px;
+  color: #0ea5e9;
+}
+
+.discover-empty strong {
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.discover-empty span {
+  color: rgba(255, 255, 255, 0.55);
+  font-family: "Barlow", sans-serif;
+  font-size: 0.95rem;
+}
+
+.discover-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.discover-load-more button {
+  min-width: 180px;
+  cursor: pointer;
+}
+
+.discover-load-more button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+@media (max-width: 1180px) {
+  .discover-hero-inner,
+  .discover-heading-row {
+    grid-template-columns: 1fr;
+  }
+
+  .discover-hero-panel {
+    max-width: 340px;
+  }
+
+  .discover-filter-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .discover-search-field {
+    grid-column: 1 / -1;
+  }
+
+  .discover-event-row {
+    grid-template-columns: 70px minmax(150px, 230px) minmax(0, 1fr);
+  }
+
+  .discover-event-side {
+    grid-column: 2 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  .discover-hero {
+    min-height: 640px;
+    padding: 112px 18px 36px;
+  }
+
+  .discover-hero-copy h1 {
+    font-size: clamp(3.3rem, 18vw, 5.8rem);
+  }
+
+  .discover-hero-panel {
+    max-width: none;
+  }
+
+  .discover-hero-panel img {
+    aspect-ratio: 16 / 9;
+  }
+
+  .discover-hero-controls {
+    justify-content: center;
+  }
+
+  .discover-browsing {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .discover-browsing div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .discover-browsing button {
+    padding: 0 10px;
+  }
+
+  .discover-filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .discover-event-row {
+    grid-template-columns: 62px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .discover-date-badge {
+    grid-row: span 2;
+    min-height: 100%;
+    padding-right: 10px;
+  }
+
+  .discover-event-row > img {
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+
+  .discover-event-main {
+    grid-column: 1 / -1;
+  }
+
+  .discover-event-side {
+    grid-column: 1 / -1;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .discover-ticket-label {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .discover-event-side a {
+    width: 100%;
+  }
+}

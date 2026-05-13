@@ -1,0 +1,103 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Str;
+
+class BlogPost extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'title',
+        'slug',
+        'excerpt',
+        'content',
+        'featured_image',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'canonical_url',
+        'og_image',
+        'status',
+        'author_id',
+        'category_id',
+        'view_count',
+        'published_at',
+        'scheduled_at',
+        'created_by',
+    ];
+
+    protected $casts = [
+        'published_at' => 'datetime',
+        'scheduled_at' => 'datetime',
+    ];
+
+    public function author(): BelongsTo
+    {
+        return $this->belongsTo(Author::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(BlogCategory::class, 'category_id');
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(BlogTag::class, 'blog_post_tag', 'post_id', 'tag_id')
+            ->withPivot('created_at');
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query
+            ->where('status', 'published')
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
+    }
+
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        $term = trim((string) $term);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        if ($query->getConnection()->getDriverName() === 'mysql') {
+            return $query->whereFullText(['title', 'excerpt', 'content'], $term);
+        }
+
+        $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $term) . '%';
+
+        return $query->where(function (Builder $query) use ($like): void {
+            $query
+                ->where('title', 'like', $like)
+                ->orWhere('excerpt', 'like', $like)
+                ->orWhere('content', 'like', $like);
+        });
+    }
+
+    public function getReadingMinutesAttribute(): int
+    {
+        $wordCount = str_word_count(strip_tags($this->content));
+
+        return max(1, (int) ceil($wordCount / 220));
+    }
+
+    public function getSeoTitleAttribute(): string
+    {
+        return $this->meta_title ?: Str::limit($this->title . ' | Black Sky Enterprise', 60, '');
+    }
+
+    public function getSeoDescriptionAttribute(): string
+    {
+        return $this->meta_description ?: Str::limit((string) $this->excerpt, 160, '');
+    }
+}

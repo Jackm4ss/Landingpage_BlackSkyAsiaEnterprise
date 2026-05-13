@@ -1,640 +1,670 @@
-# Product Requirements Document (PRD)
-# Black Sky Asia Enterprise — Event Management MVP
+# PRD — Project Requirements Document
+# Black Sky Asia Enterprise — Event Promoter Platform
+## Versi 5.0 — Blog CMS + SEO Page One
 
-**Version:** 1.0  
-**Date:** 2026-05-12  
+**Version:** 5.0  
+**Date:** 2026-05-13  
 **Prepared For:** Black Sky Asia Enterprise  
 **Prepared By:** Development Team  
 **Status:** Draft for Development Sprint
 
 ---
 
-## 1. Executive Summary
+## 1. Overview
 
-Black Sky Asia Enterprise adalah entitas manajemen hiburan, produksi acara, dan promosi konser di Asia Tenggara (fokus Indonesia & Malaysia). MVP ini bertujuan membangun platform digital yang menjembatani teknologi dengan hiburan, mencakup:
+Aplikasi ini bertujuan untuk membangun platform digital bagi **Black Sky Asia Enterprise**, sebuah perusahaan **Event Promoter & Manajemen Hiburan** yang beroperasi di Malaysia dan Indonesia. Platform ini **bukan tempat jual-beli tiket secara internal** — tiket dijual melalui vendor eksternal (Tixr, MalamGalau, dll.) — melainkan berfungsi sebagai pusat promosi acara, monitoring penjualan tiket, dan manajemen konten digital artis.
 
-- **Landing Page & Event Discovery** — Informasi acara, countdown, banner dinamis.
-- **User Authentication** — Register, login, email verification, reset password.
-- **Ticketing Integration** — Pembelian tiket via vendor eksternal (Ticket2U / pihak ketiga) dengan sinkronisasi status pembayaran melalui API.
-- **Admin CMS** — Manajemen konten event, banner, user, notifikasi, laporan.
-- **User Dashboard** — Riwayat tiket, notifikasi, aktivitas.
-- **Notification & Reporting** — Push notifikasi targetted, export CSV/Excel.
+**SEO adalah prioritas utama.** Platform dirancang untuk **mencapai page one** di Google, Bing, dan platform search engine lainnya untuk kata kunci terkait konser, event, dan artis di Malaysia dan Indonesia.
 
-**Target Scale:** Up to **50,000 concurrent users** dengan zero-downtime deployment dan admin CRUD yang tidak terganggu oleh traffic tinggi.
+Masalah utama yang ingin diselesaikan:
+- Tidak ada pusat informasi digital untuk showcase event dan profil artis.
+- Tidak ada sistem monitoring terpusat untuk melacak penjualan tiket dari berbagai vendor eksternal.
+- Butuh platform SEO-friendly yang mampu menampung traffic tinggi (hingga 50 ribu pengunjung) saat announcement event besar tanpa downtime.
+- Butuh blog/CMS yang powerful untuk content marketing dan organic traffic.
 
----
+Tujuan utama aplikasi adalah menyediakan:
+1. **Public Site** — Landing page dinamis, blog SEO-optimized, event showcase, redirect ke vendor tiket.
+2. **User Area** — Publik bisa registrasi/login untuk melihat histori tiket (hasil sync dari vendor), menyimpan event favorit, dan menerima notifikasi.
+3. **Admin Panel** — Manajemen event, artis, blog (kategori, tag, author), vendor links, sinkronisasi data penjualan, dan laporan.
 
-## 2. Tech Stack & Non-Deprecated Libraries
-
-### 2.1 Backend — Laravel 11.x
-| Layer | Technology / Library | Purpose | Status (2026) |
-|-------|---------------------|---------|---------------|
-| Framework | **Laravel 11.x** | Core framework | ✅ Active LTS |
-| Auth (API) | **Laravel Sanctum** (`laravel/sanctum`) | SPA cookie-based auth + API tokens | ✅ First-party, maintained |
-| Auth Backend | **Laravel Fortify** (`laravel/fortify`) | Headless auth logic (login, register, 2FA, verification) | ✅ First-party |
-| Queue | **Laravel Horizon** (`laravel/horizon`) | Redis queue monitoring & management | ✅ First-party, essential for scale |
-| High Perf | **Laravel Octane** (`laravel/octane`) | Swoole/RoadRunner in-memory server | ✅ First-party, throughput multiplier |
-| Realtime | **Laravel Reverb** (`laravel/reverb`) | First-party WebSocket server (notifikasi, broadcast) | ✅ First-party, replaces SSE for scale |
-| Monitoring | **Laravel Pulse** (`laravel/pulse`) | Production performance monitoring | ✅ First-party |
-| Cache / Session | **Redis** (`predis/predis` or ext-phpredis) | Distributed cache, session store, queue backend | ✅ Industry standard |
-| RBAC | **spatie/laravel-permission** | Role-based access control (Admin vs User) | ✅ 12K+ stars, actively maintained |
-| Excel/CSV | **SpartnerNL/Laravel-Excel** (`maatwebsite/excel`) | Export laporan | ✅ v3.1.69 (Apr 2026), 12K+ stars |
-| Response Cache | **spatie/laravel-responsecache** | Cache full HTTP response | ✅ Active |
-| Phone Validation | **Propaganistas/Laravel-Phone** | Validasi nomor telepon | ✅ Active |
-| API Docs | **DarkaOnLine/L5-Swagger** | OpenAPI 3.0 / Swagger documentation | ✅ Active |
-| PDF (optional) | **barryvdh/laravel-dompdf** | Generate tiket/report PDF | ✅ Active |
-| IDE Helper | **barryvdh/laravel-ide-helper** | Dev productivity | ✅ Active |
-| Routing JS | **tighten/ziggy** | Use Laravel routes in React | ✅ Active |
-
-### 2.2 Frontend — React 18+ (Vite)
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Framework | **React 18+** + **Vite** | SPA (Landing Page + Admin Panel + User Dashboard) |
-| HTTP Client | **Axios** | API calls with CSRF/Sanctum integration |
-| State / Cache | **TanStack Query (React Query) v5** | Server state, caching, background refetch, cursor pagination | 
-| Forms | **React Hook Form** + **Zod** | Performant forms + schema validation |
-| Tables | **TanStack Table v8** | Admin datatables (sorting, filtering, pagination) |
-| UI Components | **shadcn/ui** atau **Ant Design 5.x** | Pre-built accessible components |
-| Date/Time | **date-fns** | Manipulasi tanggal event |
-| Realtime | **Laravel Echo** + **Reverb** | Subscribe notifikasi real-time |
-
-### 2.3 Database & Infrastructure
-| Layer | Technology | Reasoning |
-|-------|-----------|-----------|
-| Database | **MySQL 8.0+** atau **MariaDB 10.6+** | User familiar; support read-replicas untuk scale |
-| Search | **Meilisearch** via **Laravel Scout** | Full-text search event (self-hosted, lebih cepat & murah dari Algolia) |
-| Queue Backend | **Redis** | Horizon-compatible, performant |
-| Cache | **Redis** | Distributed, atomic, support tagging |
-| Web Server | **Nginx** + **PHP-FPM** (dev) / **Octane** (production) | Octane untuk 50K concurrency |
-| Load Balancer | **Nginx** / **HAProxy** / **Cloudflare LB** | Distribute traffic ke multiple Octane workers |
-| Object Storage | **AWS S3** / **MinIO** / **Cloudflare R2** | Banner, event thumbnail, asset statis |
-| CDN | **Cloudflare** / **AWS CloudFront** | Static asset delivery, DDoS protection |
+**Role System (Hanya 2):**
+- **`admin`** — Full CMS access, report, vendor sync, push notifikasi.
+- **`user`** — Login, lihat tiket (synced), bookmark event, notifikasi, profil.
 
 ---
 
-## 3. System Architecture for High Traffic (50K Users)
+## 2. Requirements
 
-### 3.1 Deployment Topology
-```
-[User] 
-   → [CDN / Cloudflare] 
-   → [Load Balancer (Nginx)] 
-   → [App Server 1 .. N] — Laravel Octane (Swoole/RoadRunner)
-         ↓
-   [Redis Cluster] — Session | Cache | Queue | Broadcast
-         ↓
-   [MySQL Master] — Write operations (Admin CRUD, Transactions)
-         ↓
-   [MySQL Slave 1 .. N] — Read operations (Event list, Landing page, Reports)
-         ↓
-   [Queue Worker 1 .. N] — Horizon managed (Email, Export, Ticket sync)
-         ↓
-   [Meilisearch] — Search index
-```
-
-### 3.2 High-Traffic Strategy
-| Problem | Solution |
-|---------|----------|
-| **50K Concurrent Reads** (landing, event list) | Read replicas MySQL + Redis response cache (`spatie/laravel-responsecache`) + CDN untuk banner/thumbnail |
-| **Admin CRUD Bottleneck** | Admin API route ke **database MASTER** dengan queue untuk heavy operation (export, mass notification). Admin panel di-serve dari subdomain terpisah (`admin.*`) dengan connection pool dedicated. |
-| **Write Bottleneck** (ticket transaction) | Queue semua write non-critical. Gunakan `QUEUE_CONNECTION=redis` + Horizon. Ticket sync dari Ticket2U di-queue. |
-| **Session Store** | Redis (shared across app servers, sticky session tidak wajib) |
-| **Real-time Notifikasi** | Reverb WebSocket (horizontal scalable, lebih efisien dari polling/SSE pada 50K users) |
-| **Search Performance** | Meilisearch (sub-millisecond search, tidak bebani MySQL) |
-| **Zero Downtime Deploy** | Laravel Envoyer / Deployer (symlink switching) + Octane reload graceful |
-
-### 3.3 Laravel Octane Configuration
-- **Driver:** `swoole` (lebih mature untuk production) atau `roadrunner`
-- **Workers:** `auto` (sesuai CPU core) atau tetap `8–16` per instance
-- **Task Workers:** Dedicated untuk background task dalam Octane
-- **Max Requests:** 1000–5000 per worker (prevent memory leak)
-- **Watch:** Disabled in production
+- **Aksesibilitas:** Aplikasi harus dapat diakses melalui Web Browser (desktop dan mobile responsive).
+- **Pengguna:** Sistem dirancang untuk **2 role** — `admin` (akses penuh CMS & report) dan `user` (publik yang bisa registrasi, lihat tiket, bookmark event).
+- **Data Input:** Admin input data event, artis, blog, dan konfigurasi vendor secara manual. Data penjualan tiket diambil otomatis via API eksternal (scheduled pull).
+- **Spesifisitas Data:** Setiap event mencatat informasi detail seperti venue, tanggal, link vendor tiket, artist lineup, meta SEO.
+- **SEO:** Semua halaman publik (landing, event, artist, blog) harus SEO-optimized dengan meta tags, structured data, sitemap, dan URL slug yang search-engine friendly.
+- **Notifikasi:** Peringatan dan notifikasi event baru cukup ditampilkan secara visual di dashboard user dan admin.
+- **Performa:** Sistem harus mampu menangani **50.000 concurrent visitors** di landing page tanpa bottleneck, serta admin CRUD yang tidak terganggu oleh traffic tinggi.
 
 ---
 
-## 4. Database Schema Design
+## 3. Core Features
 
-### 4.1 Core Tables
+### 3.1 Public Site (SEO-Optimized)
+1. **Landing Page**
+   - Hero banner dinamis, daftar event yang sedang berlangsung/akan datang.
+   - Detail event: deskripsi, venue, tanggal, artist lineup, countdown timer.
+   - Tombol "Beli Tiket" yang mengarahkan (redirect) ke platform vendor eksternal.
+   - **SEO:** Meta title/description per event, Open Graph tags, structured data (Event schema), canonical URL.
 
-```sql
--- users (Fortify + Sanctum compatible)
-CREATE TABLE users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    email_verified_at TIMESTAMP NULL,
-    phone VARCHAR(20) NULL,
-    password VARCHAR(255) NOT NULL,
-    avatar VARCHAR(500) NULL,
-    is_active TINYINT(1) DEFAULT 1,
-    remember_token VARCHAR(100) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_email (email),
-    INDEX idx_phone (phone)
-) ENGINE=InnoDB;
+2. **Event Discovery / Explore**
+   - Halaman daftar event dengan filter (kota, tanggal, genre, status).
+   - Pagination atau infinite scroll.
+   - **SEO:** Indexable page dengan proper meta tags, breadcrumb schema.
 
--- roles & permissions (spatie/laravel-permission)
--- Package akan generate: roles, permissions, model_has_roles, model_has_permissions, role_has_permissions
+3. **Artist Profile Page**
+   - Profil artis dengan daftar event yang diikuti.
+   - Bio, genre, foto, social media links.
+   - **SEO:** Person schema, meta tags per artist.
 
--- events
-CREATE TABLE events (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) UNIQUE NOT NULL,
-    description LONGTEXT NULL,
-    venue VARCHAR(255) NOT NULL,
-    venue_address TEXT NULL,
-    start_date DATETIME NOT NULL,
-    end_date DATETIME NULL,
-    timezone VARCHAR(50) DEFAULT 'Asia/Jakarta',
-    status ENUM('draft','scheduled','published','archived','cancelled') DEFAULT 'draft',
-    thumbnail VARCHAR(500) NULL,
-    banner_image VARCHAR(500) NULL,
-    meta_title VARCHAR(255) NULL,
-    meta_description TEXT NULL,
-    created_by BIGINT UNSIGNED NOT NULL,
-    published_at TIMESTAMP NULL,
-    scheduled_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_status_published (status, published_at),
-    INDEX idx_start_date (start_date),
-    INDEX idx_slug (slug),
-    FULLTEXT INDEX ft_title_desc (title, description), -- untuk MySQL 8 fulltext
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
-) ENGINE=InnoDB;
+4. **Blog CMS (SEO-Optimized)**
+   - Daftar artikel dengan filter kategori dan tag.
+   - Detail artikel dengan rich content (heading hierarchy, internal linking).
+   - **SEO:** Article schema, breadcrumb, meta tags, Open Graph, Twitter Card.
+   - Author bio di setiap artikel.
 
--- event_tickets (master data tiket dari vendor eksternal / internal cache)
-CREATE TABLE event_tickets (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    event_id BIGINT UNSIGNED NOT NULL,
-    ticket_type VARCHAR(100) NOT NULL, -- e.g., VIP, Regular, Early Bird
-    price DECIMAL(15,2) NOT NULL,
-    quota INT UNSIGNED NULL,
-    sold INT UNSIGNED DEFAULT 0,
-    ticket2u_package_id VARCHAR(100) NULL, -- mapping ke vendor
-    is_active TINYINT(1) DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_event_active (event_id, is_active),
-    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
-) ENGINE=InnoDB;
+5. **News/Promo Section**
+   - Pengumuman singkat terkait event (berbeda dari blog — lebih ke press release).
 
--- banners (CMS slider)
-CREATE TABLE banners (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    image VARCHAR(500) NOT NULL,
-    link_url VARCHAR(500) NULL,
-    position TINYINT UNSIGNED DEFAULT 0,
-    status ENUM('draft','published','scheduled','archived') DEFAULT 'draft',
-    scheduled_at TIMESTAMP NULL,
-    published_at TIMESTAMP NULL,
-    start_date DATE NULL,
-    end_date DATE NULL,
-    created_by BIGINT UNSIGNED NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_status_position (status, position),
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
-) ENGINE=InnoDB;
+### 3.2 User Dashboard (Authenticated)
+- **Tiket Saya:** Histori tiket dari vendor sync (auto-match by email).
+- **Event Tersimpan:** Bookmark event favorit.
+- **Notifikasi:** Notifikasi dari admin (event baru, pengumuman, reminder).
+- **Profil:** Edit nama, telepon, avatar, ganti password.
 
--- transactions (sinkronisasi dari vendor ticketing)
-CREATE TABLE transactions (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NOT NULL,
-    event_id BIGINT UNSIGNED NOT NULL,
-    ticket_id BIGINT UNSIGNED NULL,
-    vendor ENUM('ticket2u','internal') DEFAULT 'ticket2u',
-    vendor_transaction_id VARCHAR(255) NULL, -- ID dari Ticket2U
-    vendor_payload JSON NULL, -- raw payload dari API vendor
-    amount DECIMAL(15,2) NOT NULL,
-    currency CHAR(3) DEFAULT 'MYR',
-    status ENUM('pending','processing','success','failed','cancelled','refunded') DEFAULT 'pending',
-    payment_method VARCHAR(50) NULL,
-    paid_at TIMESTAMP NULL,
-    checked_in_at TIMESTAMP NULL,
-    qr_code VARCHAR(255) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_status (user_id, status),
-    INDEX idx_vendor_txn (vendor, vendor_transaction_id),
-    INDEX idx_event_status (event_id, status),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
-    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE RESTRICT,
-    FOREIGN KEY (ticket_id) REFERENCES event_tickets(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
+### 3.3 Admin CMS Panel
+- Manajemen Event (CRUD) dengan meta SEO fields.
+- Manajemen Artis (CRUD) dengan meta SEO fields.
+- **Manajemen Blog (CRUD):** artikel, kategori, tag, author.
+- Manajemen Banner & News.
+- Manajemen Vendor: konfigurasi API vendor eksternal.
+- Sinkronisasi Data: trigger manual atau scheduled pull data transaksi dari vendor.
 
--- notifications (database + broadcast)
-CREATE TABLE notifications (
-    id CHAR(36) PRIMARY KEY, -- UUID
-    type VARCHAR(255) NOT NULL,
-    notifiable_type VARCHAR(255) NOT NULL,
-    notifiable_id BIGINT UNSIGNED NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    body TEXT NOT NULL,
-    data JSON NULL,
-    read_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_notifiable (notifiable_type, notifiable_id, read_at),
-    INDEX idx_created_at (created_at)
-) ENGINE=InnoDB;
+### 3.4 Monitoring & Reporting (Admin)
+- Dashboard admin dengan statistik.
+- Laporan penjualan multi-vendor dengan filter.
+- Export laporan ke format Excel/CSV.
 
--- admin_push_logs (log notifikasi push dari admin ke selected/all users)
-CREATE TABLE admin_push_logs (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    admin_id BIGINT UNSIGNED NOT NULL,
-    target_type ENUM('all','selected','role') NOT NULL,
-    target_ids JSON NULL, -- array user_id jika selected
-    title VARCHAR(255) NOT NULL,
-    body TEXT NOT NULL,
-    sent_count INT UNSIGNED DEFAULT 0,
-    failed_count INT UNSIGNED DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE RESTRICT
-) ENGINE=InnoDB;
-
--- news / articles (optional CMS)
-CREATE TABLE news (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) UNIQUE NOT NULL,
-    content LONGTEXT NULL,
-    excerpt TEXT NULL,
-    featured_image VARCHAR(500) NULL,
-    status ENUM('draft','published','scheduled','archived') DEFAULT 'draft',
-    published_at TIMESTAMP NULL,
-    created_by BIGINT UNSIGNED NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_status_published (status, published_at),
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
-) ENGINE=InnoDB;
-
--- activity_logs (audit trail admin)
-CREATE TABLE activity_logs (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    log_name VARCHAR(100) NULL,
-    description TEXT NOT NULL,
-    subject_type VARCHAR(255) NULL,
-    subject_id BIGINT UNSIGNED NULL,
-    causer_type VARCHAR(255) NULL,
-    causer_id BIGINT UNSIGNED NULL,
-    properties JSON NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_subject (subject_type, subject_id),
-    INDEX idx_causer (causer_type, causer_id),
-    INDEX idx_log_name (log_name)
-) ENGINE=InnoDB;
-```
-
-### 4.2 Read Replica Strategy
-- **Master:** Semua write (Admin CRUD, user register, transaction insert/update).
-- **Slave 1–3:** Read queries (landing page events, event detail, user ticket list, report generation).
-- **Laravel Config:** Gunakan `DB::connection('mysql::read')->...` atau package `matthewbdaly/laravel-read-replicas` jika diperlukan. Laravel 11 native mulai support read/write splitting via config.
+### 3.5 Notifikasi Push (Admin to User)
+- Admin bisa kirim notifikasi ke semua user atau user tertentu.
+- User menerima notifikasi real-time di dashboard.
 
 ---
 
-## 5. API Specification (REST + JSON)
+## 4. User Flow
 
-### 5.1 Authentication Flow (Sanctum + Fortify)
-```
-POST /api/sanctum/csrf-cookie     → Set XSRF-TOKEN cookie
-POST /api/register                → Fortify handled
-POST /api/login                   → Fortify handled
-POST /api/logout                  → Fortify handled
-POST /api/forgot-password         → Fortify handled
-POST /api/reset-password          → Fortify handled
-POST /api/email/verification-notification → Fortify handled
-GET  /api/verify-email/{id}/{hash}→ Fortify handled
-GET  /api/user                    → auth:sanctum
-```
-**Security:** Rate limit `authentication` — 5 requests/minute per IP+email.
+### User Flow (Publik)
+1. **Landing:** User mengunjungi website, melihat daftar event dan detail acara.
+2. **SEO Discovery:** User menemukan artikel blog atau profil artis via search engine.
+3. **Beli Tiket:** User klik "Beli Tiket" dan di-redirect ke vendor eksternal.
+4. **Registrasi/Login:** User bisa membuat akun atau login untuk mengakses fitur tambahan.
+5. **Dashboard User:** User melihat Tiket Saya (auto-sync), Event Tersimpan, dan Notifikasi.
+6. **Bookmark:** User bisa simpan event ke daftar favorit.
 
-### 5.2 Landing & Public Event (Cached)
-```
-GET  /api/v1/banners?status=published&position=hero → List banner (ResponseCache: 300s)
-GET  /api/v1/events?status=published&page=1&per_page=12 → List event (ResponseCache: 60s)
-GET  /api/v1/events/{slug}      → Event detail (ResponseCache: 120s)
-GET  /api/v1/events/{slug}/tickets → Available ticket types
-```
+### Admin Flow
+1. **Login:** Admin masuk ke panel admin melalui subdomain terpisah.
+2. **Kelola Event:** Admin membuat event baru, upload poster, tentukan venue, input link vendor tiket, isi meta SEO.
+3. **Kelola Blog:** Admin membuat artikel blog, pilih kategori dan tag, tentukan author, isi meta SEO.
+4. **Sinkronisasi:** Admin trigger sync atau tunggu scheduled pull untuk mengambil data penjualan dari vendor.
+5. **Monitoring:** Admin melihat laporan penjualan dan kirim notifikasi ke user.
 
-### 5.3 User Dashboard (auth:sanctum)
-```
-GET  /api/v1/me/dashboard       → Widget: upcoming event, active ticket, unread notif count
-GET  /api/v1/me/tickets?status=active|past → User ticket list (cursor pagination)
-GET  /api/v1/me/tickets/{id}    → Ticket detail + QR
-GET  /api/v1/me/notifications   → Notification list (cursor pagination)
-PATCH /api/v1/me/notifications/{id}/read → Mark read
-```
+```mermaid
+sequenceDiagram
+    participant U as User (Browser)
+    participant SE as Search Engine (Google/Bing)
+    participant Pub as Public Site (React)
+    participant API as Backend API (Laravel)
+    participant DB as Database (MySQL)
+    participant Ven as Vendor API (Tixr/MalamGalau)
 
-### 5.4 Ticket Purchase Flow (Ticket2U Integration)
-```
-POST /api/v1/events/{slug}/buy  → Initiate purchase
-  Body: { ticket_id, quantity, callback_url }
-  Response: { redirect_url: "https://ticket2u.com/...", vendor_txn_id: "T2U-xxx" }
-  → Frontend redirect ke Ticket2U
-  → Ticket2U callback/webhook ke backend
+    Note over SE, Pub: SEO Discovery Flow
 
-POST /api/v1/webhooks/ticket2u  → Callback dari Ticket2U (idempotent, signed)
-  Body: { vendor_transaction_id, status, payload }
-  → Queue job: SyncTransactionJob → update transactions table
-  → Broadcast: TransactionUpdated ke user via Reverb
-```
+    SE->>API: Crawl /sitemap.xml
+    API->>DB: Query all indexable URLs
+    DB-->>API: Return URLs
+    API-->>SE: Serve XML sitemap
 
-### 5.5 Admin CMS (auth:sanctum + role:admin)
-```
-GET    /api/v1/admin/dashboard      → Stats cards (cache 60s)
-GET    /api/v1/admin/events         → Event list (paginated, filter: status, date, venue)
-POST   /api/v1/admin/events         → Create event
-GET    /api/v1/admin/events/{id}    → Detail event
-PUT    /api/v1/admin/events/{id}    → Update event
-DELETE /api/v1/admin/events/{id}    → Soft delete / archive
-POST   /api/v1/admin/events/{id}/publish    → Publish now
-POST   /api/v1/admin/events/{id}/schedule → Schedule publish
+    SE->>Pub: Crawl /blog/konser-armada-2025-kl
+    Pub->>API: GET /public/blog/{slug} (SSR meta)
+    API->>DB: Query blog with category, tag, author
+    DB-->>API: Return blog data
+    API-->>Pub: Return HTML with meta tags + schema
+    Pub-->>SE: Indexable page with structured data
 
-GET    /api/v1/admin/banners        → Banner list
-POST   /api/v1/admin/banners        → Upload banner
-PUT    /api/v1/admin/banners/{id}   → Update
-DELETE /api/v1/admin/banners/{id}   → Delete
+    Note over U, Ven: User Engagement Flow
 
-GET    /api/v1/admin/users          → User list (filter, search)
-GET    /api/v1/admin/users/{id}     → User detail
-PUT    /api/v1/admin/users/{id}     → Update status / role
+    U->>Pub: Search "konser armada KL"
+    SE-->>U: Show result from blackskyasia.com
+    U->>Pub: Click result, read blog
+    Pub-->>U: Display blog + related events
 
-GET    /api/v1/admin/transactions   → Transaction list (filter: event, date, status)
-GET    /api/v1/admin/reports/export → Queue export job, return download URL (Laravel Excel)
+    U->>Pub: Click "Beli Tiket"
+    Pub-->>U: Open vendor.tixr.com (redirect)
 
-POST   /api/v1/admin/notifications/push → Push notif (target: all | selected[] | role)
-  → Dispatch SendPushNotificationJob ke queue
-  → Job mengirim broadcast Reverb + insert ke DB notifications
+    U->>Ven: Complete purchase on vendor
+    Ven-->>U: Return to blackskyasia.com
+
+    Note over API, DB: Scheduled Sync
+
+    API->>Ven: GET /sales (scheduled pull)
+    Ven-->>API: Return transaction data
+    API->>DB: Save to synced_transactions
+    API->>DB: Match buyer_email with users.email
+    DB-->>API: Update user_id
+
+    U->>Pub: Login & Buka Dashboard
+    Pub->>API: GET /me/tickets
+    API->>DB: Query synced_transactions WHERE user_id = ?
+    DB-->>API: Return tiket user
+    API-->>Pub: Return data tiket
+    Pub-->>U: Tampilkan "Tiket Saya"
 ```
 
 ---
 
-## 6. Development Sprint Breakdown (10 Hari)
+## 5. Architecture
 
-### Day 1 — Auth & User Foundation
-**Goal:** Full auth live, protected route, dashboard layout ready.
+```mermaid
+sequenceDiagram
+    participant Client as Browser (React SPA)
+    participant Bot as Search Engine Bot
+    participant LB as Load Balancer (Nginx)
+    participant App as App Server (Laravel Octane)
+    participant SSR as SSR Service (Inertia/Next.js)
+    participant Queue as Queue Worker (Horizon)
+    participant Cache as Redis (Cache/Queue/Session)
+    participant DB as MySQL (Master + Slaves)
+    participant Search as Meilisearch
+    participant S3 as Object Storage (S3/R2)
 
-- **Backend:**
-  - Install Laravel 11 + Fortify + Sanctum + spatie/laravel-permission.
-  - Configure Sanctum SPA auth (cookie-based, same top-level domain).
-  - Setup Redis session & cache driver.
-  - Implement API routes: register, login, logout, forgot/reset password, email verification.
-  - Rate limiting auth endpoints (5 req/min).
-  - Seeder: Admin user, default roles.
+    Note over Client, S3: Public Request with SEO
 
-- **Frontend:**
-  - Axios instance with `withCredentials: true`, CSRF init flow.
-  - Pages: Login, Register, Forgot Password, Reset Password, Email Verification.
-  - Route guard: redirect unauthenticated ke login.
-  - Layout: Sidebar/Navbar responsive, Dashboard shell.
+    Client->>LB: GET /events/pop-up-muzik-2025
+    LB->>App: Forward request
+    App->>Cache: Check response cache
+    Cache-->>App: Cache hit / miss
+    alt Cache miss
+        App->>DB: Query event (read replica)
+        DB-->>App: Return event data
+        App->>App: Generate meta tags + schema
+        App->>Cache: Store response cache
+    end
+    App-->>LB: Return HTML/JSON with SEO meta
+    LB-->>Client: Response
 
-**Deliverable:** ✅ Auth end-to-end tested via Postman & React.
+    Note over Bot, S3: Search Engine Crawl
 
----
+    Bot->>LB: GET /sitemap.xml
+    LB->>App: Forward
+    App->>DB: Query all indexable URLs
+    DB-->>App: Return URLs
+    App-->>LB: XML sitemap
+    LB-->>Bot: Serve sitemap
 
-### Day 2 — Landing Page & Event Display
-**Goal:** Landing page dynamic, countdown working, responsive.
+    Bot->>LB: GET /blog/artikel-seo
+    LB->>App: Forward
+    App->>DB: Query blog + category + tag + author
+    DB-->>App: Return data
+    App->>App: Render SSR HTML with meta + schema
+    App-->>LB: Return HTML
+    LB-->>Bot: Indexable page
 
-- **Backend:**
-  - Migration & Model: `events`, `banners`.
-  - API: `GET /banners`, `GET /events`, `GET /events/{slug}`.
-  - ResponseCache middleware untuk public endpoints (60–300s).
-  - Scout + Meilisearch indexing untuk event (optional jika waktu cukup, fallback fulltext MySQL).
-  - Banner CMS API: upload image ke S3/R2, draft/publish/schedule.
+    Note over Client, S3: Admin CRUD (Write)
 
-- **Frontend:**
-  - Hero Banner slider (auto-play, swipeable).
-  - Event Card: thumbnail, name, venue, date.
-  - Event Detail: description, venue map embed, ticket list, countdown timer.
-  - Footer, About section.
-  - Responsive: mobile-first Tailwind / Ant Design grid.
+    Client->>LB: POST /admin/events
+    LB->>App: Forward
+    App->>Cache: Invalidate cache tags
+    App->>DB: Write to master DB
+    DB-->>App: Confirm
+    App->>Search: Re-index document
+    App-->>LB: Return success
+    LB-->>Client: Response
 
-**Deliverable:** ✅ Landing page fully dynamic dari API.
+    Note over Client, S3: Vendor Sync (Background)
 
----
-
-### Day 3 — Admin CMS & Event Management
-**Goal:** Full event CMS, draft/schedule/archive, admin dashboard usable.
-
-- **Backend:**
-  - Event CRUD API dengan validation (slug auto-generate, unique).
-  - Status workflow: draft → scheduled → published → archived.
-  - `scheduled_at` handler via Laravel Scheduler (publish otomatis).
-  - Policy: hanya admin boleh create/update/delete.
-  - Activity log untuk setiap CRUD (insert ke `activity_logs`).
-
-- **Frontend (Admin Panel React):**
-  - Route `/admin` dengan role guard.
-  - Dashboard: stat card (total event, user, ticket sold today).
-  - Event Manager: DataTable (TanStack Table) dengan filter, sort, pagination.
-  - Form Event: React Hook Form + Zod validation, image upload preview.
-  - Banner Manager: drag-drop sort (optional), CRUD.
-
-**Deliverable:** ✅ Admin bisa CRUD event & banner tanpa gangguan traffic (write ke master, read dari cache).
-
----
-
-### Day 4 — User Dashboard & Ticket System
-**Goal:** User dashboard widgets, my tickets, ticket detail.
-
-- **Backend:**
-  - Migration: `event_tickets`, `transactions`.
-  - API: `GET /me/dashboard`, `GET /me/tickets`, `GET /me/tickets/{id}`.
-  - Ticket QR generation (URL signed atau hash unik) — bisa pakai `simplesoftwareio/simple-qrcode` atau generate URL ke PDF.
-  - Cursor pagination untuk ticket list (performance pada dataset besar).
-
-- **Frontend:**
-  - Dashboard Widgets: Upcoming Event, Active Ticket count, Unread Notif badge, Countdown.
-  - My Tickets: tab Active / Past, card dengan QR thumbnail.
-  - Ticket Detail: QR besar, event info, download PDF (dompdf).
-
-**Deliverable:** ✅ User dashboard & ticket structure ready.
-
----
-
-### Day 5 — Notification & Report System
-**Goal:** Push notif, notif center, export CSV/Excel.
-
-- **Backend:**
-  - Migration: `notifications` (UUID), `admin_push_logs`.
-  - Notification classes: `PushNotification` via `Broadcast` (Reverb) + `Database` channel.
-  - Queue Job: `SendPushNotificationJob` — kirim ke ribuan user tanpa blocking request.
-  - Export API: `POST /admin/reports/export` → dispatch `ExportReportJob` → generate file di storage → return download URL (signed, expire 24h).
-  - Laravel Excel configuration: chunk reading/writing untuk memory efficiency.
-
-- **Frontend:**
-  - Admin: Push Notif form (target: all / selected users / role), preview, history log.
-  - User: Notification bell icon, dropdown list, mark-as-read, detail page.
-  - Admin: Report filter (date range, event, status), export button dengan loading state.
-
-**Deliverable:** ✅ Notifikasi & report export stable.
-
----
-
-### Day 6 — Ticket2U Integration & Testing
-**Goal:** Ticket purchase flow full, sync stable, error handling.
-
-- **Backend:**
-  - Service class: `Ticket2UService` — wrapper API Ticket2U (config: base_url, api_key, secret).
-  - API: `POST /events/{slug}/buy` — validate ticket, call Ticket2U API untuk create transaction, return redirect URL.
-  - Webhook handler: `POST /webhooks/ticket2u` — verify signature/payload, idempotency check (cek `vendor_transaction_id`), dispatch `SyncTransactionJob`.
-  - Job: `SyncTransactionJob` — update `transactions` table, broadcast ke user, kirim email notifikasi (queue).
-  - Error handling: retry 3x dengan exponential backoff, dead letter queue (failed_jobs).
-
-- **Frontend:**
-  - Flow: Event Detail → Pilih Ticket → Klik Buy → Cek Login → Redirect Ticket2U → Callback ke Success/Failed page.
-  - Polling halaman status (atau listen Reverb channel) untuk update real-time setelah payment.
-  - Error states: payment failed, ticket sold out, timeout.
-
-**Deliverable:** ✅ Ticket2U integration tested end-to-end.
-
----
-
-### Day 7 — Final QA & Deployment
-**Goal:** Production ready, zero-downtime deploy.
-
-- **DevOps:**
-  - Server provisioning: Nginx, PHP 8.3+, MySQL 8.0, Redis, Supervisor (queue worker).
-  - Octane setup: `php artisan octane:start --server=swoole --workers=auto`.
-  - Horizon: `php artisan horizon` via Supervisor.
-  - Reverb: `php artisan reverb:start` via Supervisor (scale horizontal).
-  - SSL: Let's Encrypt / Cloudflare Full Strict.
-  - Envoyer / Deployer: zero-downtime deployment.
-  - `.env` production: `APP_ENV=production`, `SESSION_SECURE_COOKIE=true`, `SESSION_DRIVER=redis`, `CACHE_STORE=redis`, `QUEUE_CONNECTION=redis`.
-
-- **QA:**
-  - Load testing: k6 / Locust — simulate 50K concurrent read landing page.
-  - Admin CRUD test selama load test berjalan — pastikan tidak bottleneck.
-  - Mobile responsive check (Chrome DevTools).
-  - Security: XSS, CSRF, SQL injection (Laravel handle, tapi verify), rate limit test.
-
-**Deliverable:** ✅ LIVE MVP, production ready.
-
----
-
-## 7. Security Requirements
-
-| Threat | Mitigation |
-|--------|-----------|
-| **XSS** | React escaping default, sanitize HTML pakai DOMPurify jika raw HTML. Laravel `e()` untuk Blade (jika ada). |
-| **CSRF** | Sanctum SPA auth dengan CSRF cookie + X-XSRF-TOKEN header otomatis Axios. |
-| **SQL Injection** | Eloquent ORM / Query Builder (parameterized). Raw query dilarang kecuali extreme case. |
-| **Rate Limiting** | Laravel Throttle: auth 5/min, API public 60/min, API auth 1000/min. |
-| **File Upload** | Validate mime type, size max 2MB, store di S3/R2 (bukan local), filename random, scan ClamAV (opsional). |
-| **Webhook Security** | Ticket2U webhook: verify HMAC signature atau secret key. Idempotency key cegah replay. |
-| **IDOR** | Policy Laravel: user hanya bisa akses `transactions` miliknya sendiri. Admin middleware role check. |
-| **Sensitive Data** | Password bcrypt 12 rounds. API token hash SHA-256 (Sanctum default). Phone/email encrypt jika diperlukan regulasi. |
-
----
-
-## 8. Performance & Scalability Checklist
-
-- [ ] **Laravel Octane** aktif di production (Swoole).
-- [ ] **Redis** untuk session, cache, queue, broadcast.
-- [ ] **MySQL Read Replicas** configured (1 master, 2–3 slave).
-- [ ] **ResponseCache** untuk public endpoints (events, banners).
-- [ ] **Meilisearch** untuk search (jangan query `LIKE %%` pada 50K users).
-- [ ] **Queue + Horizon** untuk semua heavy operation: export, push notif, email, ticket sync.
-- [ ] **Cursor Pagination** untuk infinite scroll / large dataset (no `OFFSET` pada page besar).
-- [ ] **CDN** untuk semua static asset & banner image.
-- [ ] **Database Indexing** sesuai query pattern (lihat schema indexes).
-- [ ] **Nginx Microcaching** (optional) layer di atas ResponseCache.
-- [ ] **Supervisor** monitoring: Octane, Horizon, Reverb, Queue Workers auto-restart.
-
----
-
-## 9. Deployment & Environment
-
-### 9.1 Required Environment Variables
-```env
-APP_ENV=production
-APP_URL=https://blackskyasia.com
-FRONTEND_URL=https://blackskyasia.com
-SESSION_DOMAIN=.blackskyasia.com
-SANCTUM_STATEFUL_DOMAINS=blackskyasia.com,admin.blackskyasia.com
-
-DB_CONNECTION=mysql
-DB_HOST=master.db.internal
-DB_READ_HOSTS=slave1.db.internal,slave2.db.internal
-DB_DATABASE=blacksky
-
-REDIS_HOST=redis.cluster.internal
-REDIS_CLIENT=phpredis
-
-QUEUE_CONNECTION=redis
-CACHE_STORE=redis
-SESSION_DRIVER=redis
-
-OCTANE_SERVER=swoole
-OCTANE_WORKERS=auto
-OCTANE_MAX_REQUESTS=5000
-
-TICKET2U_BASE_URL=https://api.ticket2u.com.my
-TICKET2U_API_KEY=
-TICKET2U_WEBHOOK_SECRET=
-
-AWS_BUCKET=blacksky-assets
-AWS_USE_PATH_STYLE_ENDPOINT=false
-```
-
-### 9.2 Supervisor Config Example
-```ini
-[program:octane]
-command=php /var/www/html/artisan octane:start --server=swoole --host=0.0.0.0 --port=8000
-autostart=true
-autorestart=true
-
-[program:horizon]
-command=php /var/www/html/artisan horizon
-autostart=true
-autorestart=true
-
-[program:reverb]
-command=php /var/www/html/artisan reverb:start --host=0.0.0.0 --port=8080
-autostart=true
-autorestart=true
+    App->>Queue: Dispatch VendorSyncJob
+    Queue->>DB: Query vendor config
+    DB-->>Queue: Return credentials
+    Queue->>Ven: GET /transactions
+    Ven-->>Queue: Return data
+    Queue->>DB: Insert/Update synced_transactions
+    Queue->>DB: Match buyer_email -> users.email
+    Queue->>Cache: Broadcast notification
 ```
 
 ---
 
-## 10. Open Questions & Assumptions
+## 6. Database Schema
 
-1. **Ticket2U API Spec:** Asumsi REST JSON dengan webhook callback. Perlu dokumen resmi dari client untuk field mapping exact.
-2. **Payment Currency:** Asumsi MYR/IDR tergantung event region. Perlu konfirmasi.
-3. **Email Provider:** Asumsi SMTP/Postmark/SES via Laravel Mail. Perlu setup.
-4. **Admin Panel Domain:** Disarankan subdomain `admin.blackskyasia.com` untuk isolasi traffic & security.
-5. **Multi-tenancy:** Tidak di-scope MVP. Jika butuh multi-region (ID vs MY), diskusikan post-MVP.
+```mermaid
+erDiagram
+    users {
+        bigint id PK
+        string name
+        string email UK
+        timestamp email_verified_at
+        string phone
+        string password
+        string avatar
+        enum role "admin,user"
+        tinyint is_active
+        timestamp created_at
+        timestamp updated_at
+    }
 
----
+    authors {
+        bigint id PK
+        string name
+        string slug UK
+        string bio
+        string photo
+        string email
+        json social_media
+        bigint user_id FK
+        tinyint is_active
+        timestamp created_at
+        timestamp updated_at
+    }
 
-## 11. Appendix: Library Installation Commands
+    artists {
+        bigint id PK
+        string name
+        string slug UK
+        text bio
+        string genre
+        string origin_country
+        string photo
+        json social_media
+        string website
+        string meta_title
+        string meta_description
+        string meta_keywords
+        string canonical_url
+        tinyint is_active
+        bigint created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
 
-```bash
-# Laravel Core & First-Party
-composer require laravel/sanctum laravel/fortify laravel/horizon laravel/octane laravel/pulse laravel/reverb
+    events {
+        bigint id PK
+        string title
+        string slug UK
+        string subtitle
+        text description
+        string venue
+        string venue_address
+        string city
+        string country
+        datetime start_date
+        datetime end_date
+        enum status "draft,scheduled,published,archived,cancelled"
+        bigint primary_vendor_id FK
+        string ticket_url
+        string ticket_info
+        string poster_image
+        string banner_image
+        json gallery
+        string meta_title
+        string meta_description
+        string meta_keywords
+        string canonical_url
+        string og_image
+        string hashtag
+        string social_activation_text
+        timestamp published_at
+        timestamp scheduled_at
+        bigint created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
 
-# Third-Party (Active & Maintained)
-composer require spatie/laravel-permission spatie/laravel-responsecache
-composer require maatwebsite/excel
-composer require propaganistas/laravel-phone
-composer require darkaonline/l5-swagger
-composer require barryvdh/laravel-dompdf
+    event_artist {
+        bigint event_id PK,FK
+        bigint artist_id PK,FK
+        tinyint performance_order
+        tinyint is_headliner
+        timestamp created_at
+    }
 
-# Scout + Meilisearch (optional tapi direkomendasikan)
-composer require laravel/scout
-# + install Meilisearch server
+    bookmarks {
+        bigint id PK
+        bigint user_id FK
+        bigint event_id FK
+        timestamp created_at
+    }
 
-# Frontend (React — sudah via npm)
-npm install @tanstack/react-query @tanstack/react-table axios react-hook-form zod date-fns laravel-echo pusher-js
-# Reverb compatible dengan Echo tanpa Pusher key jika self-hosted
+    vendors {
+        bigint id PK
+        string name
+        string slug UK
+        string website_url
+        string api_base_url
+        string api_key
+        string api_secret
+        json config
+        tinyint is_active
+        bigint created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    event_vendors {
+        bigint id PK
+        bigint event_id FK
+        bigint vendor_id FK
+        string vendor_event_id
+        string ticket_url
+        json ticket_types
+        tinyint is_primary
+        timestamp created_at
+    }
+
+    synced_transactions {
+        bigint id PK
+        bigint event_id FK
+        bigint vendor_id FK
+        bigint user_id FK
+        string vendor_transaction_id
+        string vendor_event_id
+        string buyer_name
+        string buyer_email
+        string buyer_phone
+        string ticket_type
+        int quantity
+        decimal unit_price
+        decimal total_amount
+        enum status "pending,success,failed,cancelled,refunded"
+        string payment_method
+        timestamp paid_at
+        json vendor_payload
+        timestamp last_synced_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    sync_logs {
+        bigint id PK
+        bigint vendor_id FK
+        bigint event_id FK
+        enum sync_type "manual,scheduled"
+        enum status "success,partial,failed"
+        int records_fetched
+        int records_inserted
+        int records_updated
+        int records_matched
+        text error_message
+        timestamp started_at
+        timestamp completed_at
+    }
+
+    banners {
+        bigint id PK
+        string title
+        string image
+        string link_url
+        enum link_type "internal,external"
+        tinyint position
+        enum status "draft,published,scheduled,archived"
+        timestamp scheduled_at
+        timestamp published_at
+        date start_date
+        date end_date
+        bigint created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    blog_categories {
+        bigint id PK
+        string name
+        string slug UK
+        string description
+        string meta_title
+        string meta_description
+        int sort_order
+        tinyint is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    blog_tags {
+        bigint id PK
+        string name
+        string slug UK
+        string description
+        int sort_order
+        tinyint is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    blog_posts {
+        bigint id PK
+        string title
+        string slug UK
+        text excerpt
+        text content
+        string featured_image
+        string meta_title
+        string meta_description
+        string meta_keywords
+        string canonical_url
+        string og_image
+        enum status "draft,scheduled,published,archived"
+        bigint author_id FK
+        bigint category_id FK
+        int view_count
+        timestamp published_at
+        timestamp scheduled_at
+        bigint created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    blog_post_tag {
+        bigint post_id PK,FK
+        bigint tag_id PK,FK
+        timestamp created_at
+    }
+
+    news {
+        bigint id PK
+        string title
+        string slug UK
+        text content
+        text excerpt
+        string featured_image
+        enum status "draft,published,scheduled,archived"
+        timestamp published_at
+        bigint created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    notifications {
+        char(36) id PK
+        string type
+        string notifiable_type
+        bigint notifiable_id
+        string title
+        text body
+        json data
+        timestamp read_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    admin_push_logs {
+        bigint id PK
+        bigint admin_id FK
+        enum target_type "all,selected,role"
+        json target_ids
+        string title
+        text body
+        int sent_count
+        int failed_count
+        timestamp created_at
+    }
+
+    activity_logs {
+        bigint id PK
+        string log_name
+        text description
+        string subject_type
+        bigint subject_id
+        string causer_type
+        bigint causer_id
+        json properties
+        timestamp created_at
+    }
+
+    users ||--o{ bookmarks : "has many"
+    users ||--o{ synced_transactions : "matched via email"
+    users ||--o{ authors : "can be"
+    users ||--o{ activity_logs : "causes"
+    authors ||--o{ blog_posts : "writes"
+    events ||--o{ event_artist : "has many"
+    artists ||--o{ event_artist : "performs in"
+    events ||--o{ bookmarks : "bookmarked by"
+    events ||--o{ event_vendors : "has many"
+    events ||--o{ synced_transactions : "has sales"
+    vendors ||--o{ event_vendors : "hosts"
+    vendors ||--o{ synced_transactions : "processes"
+    vendors ||--o{ sync_logs : "generates"
+    blog_categories ||--o{ blog_posts : "contains"
+    blog_posts ||--o{ blog_post_tag : "has"
+    blog_tags ||--o{ blog_post_tag : "labels"
 ```
 
+| Tabel | Deskripsi |
+|-------|-----------|
+| **users** | Data pengguna dengan 2 role: `admin` (CMS & report) dan `user` (publik). |
+| **authors** | Profil penulis blog. Bisa di-link ke user atau standalone (guest author). |
+| **artists** | Master data artis dengan **meta SEO fields** (title, description, keywords, canonical). |
+| **events** | Master data event dengan **meta SEO fields** (title, description, keywords, canonical, og_image). |
+| **event_artist** | Tabel pivot many-to-many antara event dan artis (lineup). |
+| **bookmarks** | Event yang disimpan oleh user. |
+| **vendors** | Konfigurasi vendor tiket eksternal dengan API credentials (encrypted). |
+| **event_vendors** | Link antara event dan vendor (satu event bisa punya multiple vendor links). |
+| **synced_transactions** | Mirror data transaksi dari vendor eksternal. Di-link ke user via `user_id` (auto-match by email). |
+| **sync_logs** | Log setiap kali sinkronisasi data dari vendor dilakukan. |
+| **banners** | Gambar banner untuk slider hero di landing page. |
+| **blog_categories** | Kategori blog (e.g., "Konser", "Berita Artis", "Behind The Scenes"). |
+| **blog_tags** | Tag blog (e.g., "Armada", "Zepp KL", "Pop Up Muzik"). |
+| **blog_posts** | Artikel blog dengan **rich SEO fields**, author, category, tags, view count. |
+| **blog_post_tag** | Tabel pivot many-to-many antara blog post dan tag. |
+| **news** | Pengumuman singkat/press release (berbeda dari blog — lebih ringkas). |
+| **notifications** | Notifikasi yang dikirim admin ke user (database + broadcast). |
+| **admin_push_logs** | Log push notifikasi dari admin. |
+| **activity_logs** | Audit trail untuk tracking aktivitas admin. |
+
 ---
 
-**End of Document**
+## 7. SEO Specification (Page One Target)
+
+### 7.1 SEO Fields per Entity
+
+Setiap halaman publik (event, artist, blog post) WAJIB memiliki field SEO berikut:
+
+| Field | Event | Artist | Blog Post | Deskripsi |
+|-------|-------|--------|-----------|-----------|
+| **meta_title** | ✅ | ✅ | ✅ | `<title>` tag — max 60 chars, include keyword |
+| **meta_description** | ✅ | ✅ | ✅ | `<meta name="description">` — max 160 chars |
+| **meta_keywords** | ✅ | ✅ | ✅ | `<meta name="keywords">` — comma separated |
+| **canonical_url** | ✅ | ✅ | ✅ | `<link rel="canonical">` — prevent duplicate content |
+| **og_image** | ✅ | ✅ | ✅ | Open Graph image — 1200x630px recommended |
+| **og_title** | auto | auto | auto | Open Graph title (fallback ke meta_title) |
+| **og_description** | auto | auto | auto | Open Graph description (fallback ke meta_description) |
+| **slug** | ✅ | ✅ | ✅ | URL-friendly identifier — include keyword |
+
+### 7.2 Structured Data (Schema.org)
+
+Setiap halaman publik WAJIB menyertakan JSON-LD structured data:
+
+| Halaman | Schema Type | Properties |
+|---------|-------------|------------|
+| **Event Detail** | `Event` | name, startDate, endDate, location (Place), image, description, performer (Person), offers (link to vendor) |
+| **Artist Profile** | `Person` | name, description, image, url, sameAs (social media), performerIn (events) |
+| **Blog Post** | `Article` | headline, author (Person), datePublished, dateModified, image, publisher (Organization), articleSection (category) |
+| **Blog Category** | `CollectionPage` | name, description, hasPart (list of articles) |
+| **Homepage** | `WebSite` + `Organization` | name, url, logo, sameAs (social media) |
+
+### 7.3 Sitemap & Robots
+
+| Komponen | Implementasi |
+|----------|--------------|
+| **Sitemap XML** | `GET /sitemap.xml` — auto-generated dari semua entitas published (event, artist, blog, news). Update otomatis saat publish/unpublish. |
+| **Sitemap Index** | Pisah per entitas: `sitemap-events.xml`, `sitemap-artists.xml`, `sitemap-blog.xml`, `sitemap-news.xml` |
+| **Robots.txt** | Allow all public pages, disallow admin routes, sitemap location |
+| **RSS Feed** | `GET /feed.xml` — blog posts untuk aggregator |
+
+### 7.4 URL Structure (SEO-Friendly)
+
+| Halaman | URL Pattern | Contoh |
+|---------|-------------|--------|
+| Homepage | `/` | `blackskyasia.com/` |
+| Event List | `/events` | `blackskyasia.com/events` |
+| Event Detail | `/events/{slug}` | `blackskyasia.com/events/pop-up-muzik-armada-zepp-kl-2025` |
+| Artist List | `/artists` | `blackskyasia.com/artists` |
+| Artist Detail | `/artists/{slug}` | `blackskyasia.com/artists/armada-band` |
+| Blog List | `/blog` | `blackskyasia.com/blog` |
+| Blog Category | `/blog/category/{slug}` | `blackskyasia.com/blog/category/konser` |
+| Blog Tag | `/blog/tag/{slug}` | `blackskyasia.com/blog/tag/armada` |
+| Blog Post | `/blog/{slug}` | `blackskyasia.com/blog/konser-armada-di-zepp-kl-oktober-2025` |
+| News | `/news/{slug}` | `blackskyasia.com/news/pengumuman-lineup-pop-up-muzik` |
+
+### 7.5 Performance SEO
+
+| Aspek | Target | Implementasi |
+|-------|--------|--------------|
+| **Core Web Vitals** | LCP < 2.5s, FID < 100ms, CLS < 0.1 | Octane + CDN + image optimization + lazy loading |
+| **Mobile-Friendly** | Pass Google Mobile-Friendly Test | Responsive design, touch-friendly UI |
+| **Page Speed** | Score > 90 (PageSpeed Insights) | CDN, cache, minify, preload critical CSS |
+| **HTTPS** | Wajib | SSL certificate (Let's Encrypt / Cloudflare) |
+| **Hreflang** | Optional post-MVP | Untuk multi-language (ID/MY) |
+
+---
+
+## 8. Design & Technical Constraints
+
+1.  **High-Level Technology:**
+    Sistem dibangun menggunakan stack modern:
+    - **Backend:** Laravel 11 dengan Octane (Swoole), Horizon, Reverb, Scout.
+    - **Frontend:** React 18 dengan Vite. TanStack Query untuk server state.
+    - **Admin Panel:** Filament v3 untuk rapid CRUD scaffolding.
+    - **Database:** MySQL 8.0+ dengan read replicas.
+    - **Cache/Queue/Session/Broadcast:** Redis.
+    - **Search Engine:** Meilisearch untuk full-text search event, artist, dan blog.
+    - **Object Storage:** AWS S3 atau Cloudflare R2 untuk media.
+    - **Web Server:** Nginx sebagai reverse proxy dan load balancer.
+
+2.  **High Traffic & Zero Downtime:**
+    - Landing page mampu melayani **50.000 concurrent visitors** menggunakan ResponseCache, CDN, dan MySQL read replicas.
+    - Admin CRUD tetap responsif melalui isolasi write ke database master dan pemisahan subdomain admin.
+    - Deployment zero-downtime dengan Octane graceful reload.
+
+3.  **Vendor Integration Strategy:**
+    - Sistem tidak menjual tiket secara internal. Redirect ke vendor eksternal.
+    - Data transaksi diambil via **scheduled PULL (GET)** dari API vendor setiap 15 menit.
+    - Auto-match transaksi ke user berdasarkan `buyer_email`.
+    - Semua operasi sync berjalan di background queue.
+
+4.  **SEO Architecture:**
+    - SSR atau pre-rendered meta tags untuk search engine bots.
+    - Dynamic meta tags injection di React (React Helmet Async atau Vite SSR).
+    - Structured data JSON-LD di setiap halaman publik.
+    - Auto-generated sitemap dan robots.txt.
+
+5.  **Typography Rules:**
+    Sistem antarmuka (UI) wajib menggunakan konfigurasi font variable sebagai berikut:
+    -   **Sans:** `Geist Mono, ui-monospace, monospace`
+    -   **Serif:** `serif`
+    -   **Mono:** `JetBrains Mono, monospace`

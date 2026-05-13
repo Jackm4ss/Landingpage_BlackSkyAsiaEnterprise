@@ -4,6 +4,8 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export type AuthSession = {
   name?: string;
   email: string;
+  phone?: string;
+  avatar?: string;
   signedInAt: string;
 };
 
@@ -54,6 +56,13 @@ export const getCurrentSession = () => {
   if (!isBrowser()) return null;
 
   return safeRead(window.localStorage) ?? safeRead(window.sessionStorage);
+};
+
+export const clearCurrentSession = () => {
+  if (!isBrowser()) return;
+
+  window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
 };
 
 export const createLoginSession = async ({

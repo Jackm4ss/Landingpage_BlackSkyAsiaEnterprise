@@ -1,50 +1,44 @@
-import { type CSSProperties, type FormEvent, type MouseEvent, useState } from "react";
+import { type CSSProperties, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
 import { Checkbox } from "../components/ui/checkbox";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { createRegisterSession } from "../auth/session";
+import { getAuthErrorMessage } from "../auth/auth-api";
+import { useRegisterMutation } from "../auth/auth-queries";
+import { registerSchema, type RegisterFormValues } from "../auth/auth-schemas";
 import logo from "../../assets/LOGO.png";
 import heroImage from "../../assets/hero-concert-bg.png";
 import { AuthInfoCard } from "./AuthStudioVisualPanel";
 import "./AuthPages.css";
 
-type RegisterPageProps = {
-  onNavigate: (path: string) => void;
-};
-
-export function RegisterPage({ onNavigate }: RegisterPageProps) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+export function RegisterPage() {
+  const navigate = useNavigate();
+  const registerMutation = useRegisterMutation();
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      acceptedTerms: false,
+    },
+  });
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError("");
-    setIsSubmitting(true);
+  const onSubmit = form.handleSubmit(async (values) => {
+    setSubmitError("");
 
     try {
-      await createRegisterSession({ name, email, password, acceptedTerms });
-      onNavigate("/login/success");
-    } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Registrasi gagal.");
-    } finally {
-      setIsSubmitting(false);
+      await registerMutation.mutateAsync(values);
+      navigate("/email-verification");
+    } catch (error) {
+      setSubmitError(getAuthErrorMessage(error, "Registrasi gagal."));
     }
-  };
-
-  const handleLoginLink = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    onNavigate("/login");
-  };
-
-  const handleStaticLink = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-  };
+  });
 
   const PasswordIcon = showPassword ? EyeOff : Eye;
 
@@ -61,7 +55,7 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
             <p>Let's get started. Fill in the details below to create your account.</p>
           </div>
 
-          <form className="auth-form login-page__form" onSubmit={handleSubmit} noValidate>
+          <form className="auth-form login-page__form" onSubmit={onSubmit} noValidate>
             <div className="auth-form__field">
               <Label className="auth-form__label" htmlFor="register-name">
                 Name*
@@ -70,11 +64,16 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
                 className="auth-form__input"
                 id="register-name"
                 type="text"
-                value={name}
                 autoComplete="name"
                 placeholder="Enter your full name"
-                onChange={(event) => setName(event.target.value)}
+                aria-invalid={Boolean(form.formState.errors.name)}
+                {...form.register("name")}
               />
+              {form.formState.errors.name ? (
+                <p className="auth-form__field-error">
+                  {form.formState.errors.name.message}
+                </p>
+              ) : null}
             </div>
 
             <div className="auth-form__field">
@@ -85,11 +84,16 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
                 className="auth-form__input"
                 id="register-email"
                 type="email"
-                value={email}
                 autoComplete="email"
                 placeholder="Enter your email address"
-                onChange={(event) => setEmail(event.target.value)}
+                aria-invalid={Boolean(form.formState.errors.email)}
+                {...form.register("email")}
               />
+              {form.formState.errors.email ? (
+                <p className="auth-form__field-error">
+                  {form.formState.errors.email.message}
+                </p>
+              ) : null}
             </div>
 
             <div className="auth-form__field">
@@ -101,10 +105,10 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
                   className="auth-form__input"
                   id="register-password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
                   autoComplete="new-password"
                   placeholder="Password"
-                  onChange={(event) => setPassword(event.target.value)}
+                  aria-invalid={Boolean(form.formState.errors.password)}
+                  {...form.register("password")}
                 />
                 <button
                   className="auth-form__icon-button"
@@ -115,40 +119,63 @@ export function RegisterPage({ onNavigate }: RegisterPageProps) {
                   <PasswordIcon size={17} aria-hidden="true" />
                 </button>
               </div>
-              <p className="auth-form__hint">Minimum 8 characters.</p>
+              {form.formState.errors.password ? (
+                <p className="auth-form__field-error">
+                  {form.formState.errors.password.message}
+                </p>
+              ) : (
+                <p className="auth-form__hint">Minimum 8 characters.</p>
+              )}
             </div>
 
             <div className="auth-form__row login-page__terms-row">
               <Label className="auth-form__checkline" htmlFor="register-terms">
-                <Checkbox
-                  className="auth-form__checkbox"
-                  id="register-terms"
-                  checked={acceptedTerms}
-                  onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                <Controller
+                  control={form.control}
+                  name="acceptedTerms"
+                  render={({ field }) => (
+                    <Checkbox
+                      className="auth-form__checkbox"
+                      id="register-terms"
+                      checked={field.value}
+                      onCheckedChange={(checked) => field.onChange(checked === true)}
+                      aria-invalid={Boolean(form.formState.errors.acceptedTerms)}
+                    />
+                  )}
                 />
                 <span>
                   I agree to the{" "}
-                  <a className="auth-form__link" href="#terms" onClick={handleStaticLink}>
+                  <a
+                    className="auth-form__link"
+                    href="#terms"
+                    onClick={(event) => event.preventDefault()}
+                  >
                     Terms & Conditions
                   </a>
                 </span>
               </Label>
             </div>
+            {form.formState.errors.acceptedTerms ? (
+              <p className="auth-form__field-error">
+                {form.formState.errors.acceptedTerms.message}
+              </p>
+            ) : null}
 
             <p className="auth-form__alert" role="alert">
-              {error}
+              {submitError}
             </p>
 
-            <button className="auth-form__button" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Signing up" : "Create Black Sky account"}
+            <button
+              className="auth-form__button"
+              type="submit"
+              disabled={registerMutation.isPending}
+            >
+              {registerMutation.isPending ? "Signing up" : "Create Black Sky account"}
             </button>
           </form>
 
           <p className="auth-page__switch login-page__switch">
-            Already have account?{" "}
-            <a href="/login" onClick={handleLoginLink}>
-              Sign in
-            </a>
+            Already have account? <Link to="/login">Sign in</Link>
           </p>
         </div>
       </section>

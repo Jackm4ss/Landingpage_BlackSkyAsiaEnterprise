@@ -1,0 +1,265 @@
+.bsa-date-range-trigger {
+  width: 100%;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border: 2px solid #020617;
+  border-radius: 2px;
+  background: #101b2b;
+  box-shadow: 4px 4px 0 #020617;
+  color: #f8fafc;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.1;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.bsa-date-range-trigger[data-empty="true"] {
+  color: #94a3b8;
+}
+
+.bsa-date-range-trigger svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.bsa-date-range-trigger svg:last-child {
+  margin-left: auto;
+}
+
+.bsa-date-range-content {
+  z-index: 90;
+  width: auto;
+  border: 2px solid #020617;
+  border-radius: 2px;
+  background: #0b1626;
+  box-shadow: 8px 8px 0 #020617;
+  color: #f8fafc;
+  padding: 0;
+}
+
+.bsa-date-range-calendar {
+  padding: 14px;
+}
+
+.bsa-date-range-months {
+  display: flex;
+  gap: 18px;
+}
+
+.bsa-date-range-month {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+
+.bsa-date-range-month + .bsa-date-range-month {
+  border-left: 2px solid rgba(148, 163, 184, 0.28);
+  padding-left: 18px;
+}
+
+.bsa-date-range-month + .bsa-date-range-month::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 3px;
+  width: 2px;
+  background: #020617;
+}
+
+.bsa-date-range-caption {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bsa-date-range-caption-label {
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bsa-date-range-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bsa-date-range-nav-button {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #020617;
+  border-radius: 2px;
+  background: #101b2b;
+  box-shadow: 3px 3px 0 #020617;
+  color: #f8fafc;
+}
+
+.bsa-date-range-nav-button-prev {
+  position: absolute;
+  left: 0;
+}
+
+.bsa-date-range-nav-button-next {
+  position: absolute;
+  right: 0;
+}
+
+.bsa-date-range-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bsa-date-range-head-row,
+.bsa-date-range-row {
+  display: flex;
+}
+
+.bsa-date-range-head-cell {
+  width: 36px;
+  color: #94a3b8;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.bsa-date-range-cell {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  position: relative;
+}
+
+.bsa-date-range-day {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: #f8fafc;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.bsa-date-range-day:hover {
+  background: rgba(14, 165, 233, 0.24);
+}
+
+.bsa-date-range-day-today {
+  outline: 2px solid #0ea5e9;
+  outline-offset: -2px;
+}
+
+.bsa-date-range-day-selected,
+.bsa-date-range-day-start,
+.bsa-date-range-day-end {
+  background: #0ea5e9;
+  color: #fff;
+  box-shadow: 3px 3px 0 #020617;
+}
+
+.bsa-date-range-day-middle {
+  background: rgba(14, 165, 233, 0.24);
+  color: #fff;
+}
+
+.bsa-date-range-day-outside,
+.bsa-date-range-day-disabled {
+  color: rgba(148, 163, 184, 0.55);
+}
+
+.bsa-date-range-day-hidden {
+  visibility: hidden;
+}
+
+.bsa-date-range-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 2px solid #020617;
+  padding: 12px 14px;
+}
+
+.bsa-date-range-footer button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 2px solid #020617;
+  border-radius: 2px;
+  background: #101b2b;
+  box-shadow: 3px 3px 0 #020617;
+  color: #f8fafc;
+  cursor: pointer;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  padding: 0 12px;
+  text-transform: uppercase;
+}
+
+.bsa-date-range-footer button:last-child {
+  background: #0ea5e9;
+}
+
+.bsa-date-range-footer svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 760px) {
+  .bsa-date-range-content {
+    max-width: calc(100vw - 32px);
+    overflow-x: auto;
+  }
+
+  .bsa-date-range-months {
+    flex-direction: column;
+  }
+
+  .bsa-date-range-month + .bsa-date-range-month {
+    border-left: 0;
+    border-top: 2px solid rgba(148, 163, 184, 0.28);
+    padding-left: 0;
+    padding-top: 16px;
+  }
+
+  .bsa-date-range-month + .bsa-date-range-month::before {
+    top: 4px;
+    right: 2px;
+    bottom: auto;
+    left: 2px;
+    width: auto;
+    height: 2px;
+  }
+}

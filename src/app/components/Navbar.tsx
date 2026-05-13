@@ -4,11 +4,13 @@ import { Menu, X } from "lucide-react";
 import logo from "../../assets/LOGO.png";
 
 const navLinks = [
-  { label: "ABOUT", href: "#about" },
-  { label: "EVENTS", href: "#events" },
-  { label: "WORKS", href: "#works" },
-  { label: "NEWS", href: "#news" },
-  { label: "CONTACT", href: "#contact" },
+  { label: "ABOUT", href: "/#about" },
+  { label: "DISCOVER", href: "/discover" },
+  { label: "EVENTS", href: "/#events" },
+  { label: "WORKS", href: "/#works" },
+  { label: "BLOG", href: "/blog" },
+  { label: "NEWS", href: "/#news" },
+  { label: "CONTACT", href: "/#contact" },
 ];
 
 export function Navbar() {
@@ -24,8 +26,25 @@ export function Navbar() {
 
   const handleNav = (href: string) => {
     setMobileOpen(false);
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+
+    if (href.startsWith("/#")) {
+      if (window.location.pathname !== "/") {
+        window.location.assign(href);
+        return;
+      }
+
+      const el = document.querySelector(href.replace("/", ""));
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
+    if (href.startsWith("#")) {
+      const el = document.querySelector(href);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
+    window.location.assign(href);
   };
 
   const goToLogin = () => {
@@ -55,7 +74,14 @@ export function Navbar() {
         <div className="max-w-[1600px] mx-auto px-8 py-5 flex items-center justify-between">
           {/* Logo */}
           <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={() => {
+              if (window.location.pathname === "/") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                return;
+              }
+
+              window.location.assign("/");
+            }}
             className="flex items-center group"
             aria-label="Black Sky Enterprise"
           >
@@ -120,7 +146,7 @@ export function Navbar() {
               LOGIN
             </button>
             <button
-              onClick={() => handleNav("#events")}
+              onClick={() => handleNav("/discover")}
               className="hidden lg:flex items-center gap-2 px-6 py-3 transition-all duration-300 hover:opacity-90"
               style={{
                 background: "#0EA5E9",
@@ -220,7 +246,7 @@ export function Navbar() {
                 LOGIN
               </button>
               <button
-                onClick={() => handleNav("#events")}
+                onClick={() => handleNav("/discover")}
                 className="w-full py-4"
                 style={{
                   background: "#0EA5E9",

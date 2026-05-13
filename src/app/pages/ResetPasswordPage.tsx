@@ -1,34 +1,35 @@
-import { type FormEvent, type MouseEvent, useState } from "react";
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, type UseFormRegisterReturn } from "react-hook-form";
+import { Link, useSearchParams } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { resetPassword } from "../auth/session";
+import { getAuthErrorMessage } from "../auth/auth-api";
+import { useResetPasswordMutation } from "../auth/auth-queries";
+import { resetPasswordSchema, type ResetPasswordFormValues } from "../auth/auth-schemas";
 import logo from "../../assets/LOGO.png";
 import heroImage from "../../assets/hero-concert-bg.png";
 import { AuthStudioVisualPanel } from "./AuthStudioVisualPanel";
 import "./AuthPages.css";
 
-type ResetPasswordPageProps = {
-  onNavigate: (path: string) => void;
-};
-
 type PasswordFieldProps = {
   id: string;
   label: string;
-  value: string;
-  isVisible: boolean;
   autoComplete: string;
-  onChange: (value: string) => void;
+  error?: string;
+  isVisible: boolean;
+  registration: UseFormRegisterReturn;
   onToggle: () => void;
 };
 
 const PasswordField = ({
   id,
   label,
-  value,
-  isVisible,
   autoComplete,
-  onChange,
+  error,
+  isVisible,
+  registration,
   onToggle,
 }: PasswordFieldProps) => {
   const Icon = isVisible ? EyeOff : Eye;
@@ -43,10 +44,10 @@ const PasswordField = ({
           className="auth-form__input"
           id={id}
           type={isVisible ? "text" : "password"}
-          value={value}
           autoComplete={autoComplete}
           placeholder="Password"
-          onChange={(event) => onChange(event.target.value)}
+          aria-invalid={Boolean(error)}
+          {...registration}
         />
         <button
           className="auth-form__icon-button"
@@ -57,43 +58,43 @@ const PasswordField = ({
           <Icon size={17} aria-hidden="true" />
         </button>
       </div>
+      {error ? <p className="auth-form__field-error">{error}</p> : null}
     </div>
   );
 };
 
-export function ResetPasswordPage({ onNavigate }: ResetPasswordPageProps) {
-  const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+export function ResetPasswordPage() {
+  const [searchParams] = useSearchParams();
+  const resetPasswordMutation = useResetPasswordMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
-  const [error, setError] = useState("");
+  const [submitError, setSubmitError] = useState("");
   const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const form = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: "",
+      passwordConfirmation: "",
+    },
+  });
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError("");
+  const onSubmit = form.handleSubmit(async (values) => {
+    setSubmitError("");
     setMessage("");
-    setIsSubmitting(true);
 
     try {
-      await resetPassword({ password, passwordConfirmation });
-      setMessage("Password updated. You can sign in now.");
-      setPassword("");
-      setPasswordConfirmation("");
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error ? caughtError.message : "Reset password gagal.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+      const response = await resetPasswordMutation.mutateAsync({
+        ...values,
+        email: searchParams.get("email"),
+        token: searchParams.get("token"),
+      });
 
-  const handleLoginLink = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    onNavigate("/login");
-  };
+      setMessage(response.message);
+      form.reset();
+    } catch (error) {
+      setSubmitError(getAuthErrorMessage(error, "Reset password gagal."));
+    }
+  });
 
   return (
     <main className="login-page">
@@ -108,45 +109,45 @@ export function ResetPasswordPage({ onNavigate }: ResetPasswordPageProps) {
             <p>Must be at least 8 characters.</p>
           </div>
 
-          <form className="auth-form login-page__form" onSubmit={handleSubmit} noValidate>
+          <form className="auth-form login-page__form" onSubmit={onSubmit} noValidate>
             <PasswordField
               id="reset-password"
               label="New Password*"
-              value={password}
-              isVisible={showPassword}
               autoComplete="new-password"
-              onChange={setPassword}
+              error={form.formState.errors.password?.message}
+              isVisible={showPassword}
+              registration={form.register("password")}
               onToggle={() => setShowPassword((current) => !current)}
             />
 
             <PasswordField
               id="reset-password-confirmation"
               label="Confirm Password*"
-              value={passwordConfirmation}
-              isVisible={showPasswordConfirmation}
               autoComplete="new-password"
-              onChange={setPasswordConfirmation}
+              error={form.formState.errors.passwordConfirmation?.message}
+              isVisible={showPasswordConfirmation}
+              registration={form.register("passwordConfirmation")}
               onToggle={() => setShowPasswordConfirmation((current) => !current)}
             />
 
             <p
-              className={error ? "auth-form__alert" : "auth-form__success"}
-              role={error ? "alert" : "status"}
+              className={submitError ? "auth-form__alert" : "auth-form__success"}
+              role={submitError ? "alert" : "status"}
             >
-              {error || message}
+              {submitError || message}
             </p>
 
-            <button className="auth-form__button" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Resetting" : "Reset Password"}
+            <button
+              className="auth-form__button"
+              type="submit"
+              disabled={resetPasswordMutation.isPending}
+            >
+              {resetPasswordMutation.isPending ? "Resetting" : "Reset Password"}
             </button>
 
-            <a
-              className="auth-form__button auth-form__button--ghost"
-              href="/login"
-              onClick={handleLoginLink}
-            >
+            <Link className="auth-form__button auth-form__button--ghost" to="/login">
               Back to login
-            </a>
+            </Link>
           </form>
         </div>
       </section>

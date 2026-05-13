@@ -1,0 +1,161 @@
+.bsa-country-dropdown-trigger {
+  width: 100%;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 2px solid #020617;
+  border-radius: 2px;
+  background: #101b2b;
+  box-shadow: 4px 4px 0 #020617;
+  color: #f8fafc;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.1;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.bsa-country-dropdown-trigger[data-empty="true"] {
+  color: #94a3b8;
+}
+
+.bsa-country-dropdown-trigger > svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.bsa-country-dropdown-value,
+.bsa-country-dropdown-item-main {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.bsa-country-dropdown-value {
+  flex: 1 1 auto;
+}
+
+.bsa-country-dropdown-value span:last-child,
+.bsa-country-dropdown-item-main span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bsa-country-dropdown-value img,
+.bsa-country-dropdown-item-main img {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(248, 250, 252, 0.2);
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.bsa-country-dropdown-content {
+  z-index: 90;
+  width: var(--radix-popover-trigger-width);
+  min-width: 280px;
+  border: 2px solid #020617;
+  border-radius: 2px;
+  background: #0b1626;
+  box-shadow: 8px 8px 0 #020617;
+  color: #f8fafc;
+  padding: 0;
+}
+
+.bsa-country-dropdown-command {
+  max-height: 294px;
+  border-radius: 0;
+  background: #0b1626;
+  color: #f8fafc;
+}
+
+.bsa-country-dropdown-list {
+  max-height: 294px;
+}
+
+.bsa-country-dropdown-search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 2px solid #020617;
+  background: #101b2b;
+}
+
+.bsa-country-dropdown-search [data-slot="command-input-wrapper"] {
+  height: 42px;
+  border: 0;
+  padding-inline: 12px;
+}
+
+.bsa-country-dropdown-search [data-slot="command-input"] {
+  color: #f8fafc;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bsa-country-dropdown-empty {
+  color: #94a3b8;
+  font-family: "Barlow", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 18px;
+  text-align: center;
+}
+
+.bsa-country-dropdown-group {
+  padding: 6px;
+}
+
+.bsa-country-dropdown-item {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 2px;
+  color: #f8fafc;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  padding: 8px 9px;
+}
+
+.bsa-country-dropdown-item[data-selected="true"] {
+  background: rgba(14, 165, 233, 0.2);
+}
+
+.bsa-country-dropdown-item-main {
+  flex: 1 1 auto;
+}
+
+.bsa-country-dropdown-code {
+  color: #94a3b8;
+  flex: 0 0 auto;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.bsa-country-dropdown-item > svg {
+  width: 15px;
+  height: 15px;
+  color: #0ea5e9;
+  flex: 0 0 auto;
+  opacity: 0;
+}
+
+.bsa-country-dropdown-item > svg.is-selected {
+  opacity: 1;
+}
