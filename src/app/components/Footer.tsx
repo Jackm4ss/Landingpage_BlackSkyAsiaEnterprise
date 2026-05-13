@@ -48,10 +48,10 @@ export function Footer() {
                   fontFamily: "'Barlow Condensed', sans-serif",
                   fontWeight: 900,
                   fontSize: "clamp(2rem, 4vw, 4rem)",
-                  lineHeight: 0.95,
+                  lineHeight: 1.06,
                   color: "#FFFFFF",
                   textTransform: "uppercase",
-                  marginBottom: "10px",
+                  marginBottom: "14px",
                 }}
               >
                 STAY IN THE

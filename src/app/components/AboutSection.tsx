@@ -217,7 +217,7 @@ export function AboutSection() {
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontWeight: 900,
                 fontSize: "clamp(2.8rem, 5vw, 6rem)",
-                lineHeight: 0.92,
+                lineHeight: 1.02,
                 letterSpacing: "-0.01em",
                 color: "#FFFFFF",
                 textTransform: "uppercase",

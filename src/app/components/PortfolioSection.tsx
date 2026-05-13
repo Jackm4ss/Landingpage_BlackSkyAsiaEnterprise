@@ -727,11 +727,12 @@ export function PortfolioSection() {
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="flex flex-wrap items-center gap-1"
+            className="flex w-full max-w-full flex-nowrap items-center gap-1 overflow-x-auto [scrollbar-width:none] xl:w-auto xl:max-w-none xl:overflow-visible [&::-webkit-scrollbar]:hidden"
             style={{
               background: "rgba(255,255,255,0.03)",
               padding: "4px",
               border: "1px solid rgba(255,255,255,0.07)",
+              touchAction: "pan-x",
             }}
           >
             {categoryOptions.map((category) => (
@@ -752,6 +753,8 @@ export function PortfolioSection() {
                       : "transparent",
                   border: "none",
                   cursor: "pointer",
+                  flexShrink: 0,
+                  whiteSpace: "nowrap",
                 }}
               >
                 {category.toUpperCase()}
