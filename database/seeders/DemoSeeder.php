@@ -18,6 +18,8 @@ use Spatie\Permission\Models\Role;
 
 class DemoSeeder extends Seeder
 {
+    private const DEMO_TOTAL = 10;
+
     public function run(): void
     {
         $this->seedEvents();
@@ -47,7 +49,9 @@ class DemoSeeder extends Seeder
         ];
         $accents = ['#0EA5E9', '#A855F7', '#E11D48', '#14B8A6', '#F97316', '#FFB700'];
 
-        for ($i = 1; $i <= 24; $i++) {
+        $existing = Event::query()->count();
+
+        for ($i = $existing + 1; $i <= self::DEMO_TOTAL; $i++) {
             [$city, $country, $venue, $timezone] = $cities[($i - 1) % count($cities)];
             $genre = $genres[($i - 1) % count($genres)];
             $date = now()->addDays(10 + ($i * 8));
@@ -145,7 +149,9 @@ class DemoSeeder extends Seeder
             'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1400&q=80',
         ];
 
-        for ($i = 1; $i <= 18; $i++) {
+        $existing = BlogPost::query()->count();
+
+        for ($i = $existing + 1; $i <= self::DEMO_TOTAL; $i++) {
             $categoryKey = $categories->keys()[($i - 1) % $categories->count()];
             $title = 'Black Sky Market Note ' . str_pad((string) $i, 2, '0', STR_PAD_LEFT);
             $slug = Str::slug($title);
@@ -187,7 +193,9 @@ class DemoSeeder extends Seeder
         ];
         $accents = ['#0ea5e9', '#a855f7', '#e11d48', '#14b8a6', '#f97316'];
 
-        for ($i = 1; $i <= 16; $i++) {
+        $existing = PortfolioWork::query()->count();
+
+        for ($i = $existing + 1; $i <= self::DEMO_TOTAL; $i++) {
             $title = 'Black Sky Showcase Case ' . str_pad((string) $i, 2, '0', STR_PAD_LEFT);
             $slug = Str::slug($title);
             $category = $categories[($i - 1) % count($categories)];
@@ -232,7 +240,7 @@ class DemoSeeder extends Seeder
         $countries = ['MY', 'MY', 'MY', 'ID', 'SG', 'TH', 'PH', 'VN', 'BN', 'JP', 'KR', 'AU'];
         $events = Event::query()->where('status', 'published')->orderBy('start_date')->get();
 
-        for ($i = 1; $i <= 240; $i++) {
+        for ($i = 1; $i <= self::DEMO_TOTAL; $i++) {
             $source = $sources[($i - 1) % count($sources)];
             $country = $countries[($i - 1) % count($countries)];
             $email = 'demo.member.' . str_pad((string) $i, 3, '0', STR_PAD_LEFT) . '@blacksky.test';
