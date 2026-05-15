@@ -118,6 +118,17 @@ Route::get('/portfolio/{slug}', function (string $slug) {
 Route::get('/projects/{slug}', fn (string $slug) => redirect('/portfolio/' . $slug))
     ->name('projects.show');
 
+Route::get('/reset-password/{token}', function (string $token) {
+    return view('app', [
+        'pageMeta' => [
+            'title' => 'Reset Password | Black Sky Enterprise',
+            'description' => 'Set a new Black Sky Enterprise account password using your secure reset link.',
+            'canonical' => url('/reset-password/' . $token),
+            'type' => 'website',
+        ],
+    ]);
+})->name('password.reset');
+
 Route::get('/events', function () {
     return view('app', [
         'pageMeta' => [
